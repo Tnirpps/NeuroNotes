@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <link rel="stylesheet" href="css/main.css" type="text/css" charset="utf-8">
+    <link rel="shortcut icon" href="img/favicon.ico" type="image/x-icon">
+    <script type="text/javascript" src="js/main.js"></script>
+    <title>NeuroNotes</title>
+</head>
+<body>
+
+    <header class="top-nav">
+       <img id="logo" src="" alt="NeuroNotes"> 
+    </header>
+    <form id="magic" action="/main" method="get">
+        <b>UserName</b>
+        <br>
+        <input type="text" placeholder="Admin" id="user" required>
+        <br>
+
+        <b>Password</b>
+        <br>
+        <input type="password" placeholder="1234" id="psw" required>
+        <br>
+
+        <input type="button" value="submit" onclick="send_authorization_request()">
+        <button hidden >Отправить</button>
+    </form>
+</body>
+</html>
+

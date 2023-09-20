@@ -1,0 +1,210 @@
+body {
+    font-family: 'Gilroy';
+    font-style: normal;
+    font-size: 24px;
+    color: #000000FF;
+    margin: 0;
+    font-size: 24px;
+}
+
+p {
+    margin: 0;
+    padding 0;
+}
+
+.wrapper-nav {
+    width: 100vw;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.big-logo {
+    position: fixed;
+    left: 27px;
+    top: 37px;
+}
+
+.main-container {
+  display: flex;
+  justify-content: center;
+  overflow: hidden;
+  height: 100vh;
+  background-image: url("../img/bgLogo.png");
+  background-position-x: right;
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+
+.main-wrapper, .auth-wrapper {
+    top: 50%;
+    bottom: 50%;
+}
+
+.main-wrapper {
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    position: absolute;
+}
+
+.main-button {
+    border: 3px solid #000000;
+    border-radius: 83px;
+    padding: 10px 36px;
+    background: #FFF;
+    margin-bottom: 24px;
+    font-family: 'Gilroy';
+    font-size: 28px;
+    font-weight: 500;
+    letter-spacing: 0;
+}
+
+button.wide {
+    width: 456px;
+}
+
+button.medium {
+    width: 216px;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+}
+
+form input[type=text], input[type=password]{
+    width: 366px;
+    padding: 12px 20px;
+    font-size: 18px;
+    border: 2px solid #000000;
+    border-radius: 62px;
+    outline: none;
+}
+
+form button {
+    background: #4D4C55;
+    border-radius: 70px;
+    border: none;
+    margin: auto;
+    color: #FFFFFFFF;
+    font-size: 24px;
+    padding: 12px 24px;
+
+    transition : all .1s ease-out;
+    -wekit-transition : all .1s;
+    -moz-transition : all .1s;
+
+}
+
+form button:hover {
+    background: #4D4C55CF;
+}
+
+form button:active {
+    background: #4D4C55A8;
+}
+
+.input-container {
+    margin-bottom: 24px;
+    position: relative;
+}
+
+form input:focus ~ p, form input:not(:placeholder-shown) ~ p {
+    transform: translateY(-30px) translateX(27px) scale(0.8);
+    background-color: #FFF;
+    border: none;
+    border-radius: 8px;
+    padding: 2px 20px;
+}
+
+.input-container p {
+    color: gray;
+    font-size: 18px;
+    position: absolute;
+    top: 13px;
+    left: 21px;
+    transition : all .1s ease-out;
+    -wekit-transition : all .1s;
+    -moz-transition : all .1s;
+}
+
+.text-container {
+    font-size: 24px;
+    color: #000000FF;
+    padding-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+}
+.text-container p {
+    margin-left: 20px;
+}
+
+/*
+#registration_block {
+    background-color: bisque;
+}
+*/
+
+.auth-wrapper {
+    font-family: 'Gilroy';
+    font-style: normal;
+    font-size: 24px;
+/*
+ * мб сделать ширину 410px и оверфлов хидден, ну это посмотрим
+ */
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    position: absolute;
+}
+
+
+
+#arrow_button {
+    margin-right: 20px;
+    border: none;
+    border-radius: 0;
+    background: #FFF0;
+    padding: 0;
+}
+
+#arrow_button:hover .arrow {
+    background-color: #664B4B;
+}
+
+#arrow_button:hover .arrow::before {
+    border-color: #664B4B;
+}
+
+.arrow {
+    width: 28px;
+    height: 3px;
+    margin-top: 0px;
+    background-color: #000;
+}
+
+.arrow::before{
+    content: " ";
+    position: absolute;
+    border: solid black;
+    border-width: 0 3px 3px 0;
+    display: inline-block;
+    transform: rotate(135deg);
+    padding: 6px;
+    margin-top: -6px;
+    margin-left: -14px;
+}
+
+.hidden-form-item, .hidden-main-item {
+    margin-left: 500px;
+    opacity: 0;
+    transition : all .3s ease-out;
+    -wekit-transition : all .3s;
+    -moz-transition : all .3s;
+}
+
+.hidden-main-item {
+    margin-left: -500px;
+}
+

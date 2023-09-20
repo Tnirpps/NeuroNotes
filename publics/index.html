@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <link rel="stylesheet" href="css/index.css" type="text/css" charset="utf-8">
+    <link rel="shortcut icon" href="img/favicon.ico" type="image/x-icon">
+    <script type="text/javascript" src="js/main.js"></script>
+    <script type="text/javascript" src="js/request.js"></script>
+    <script type="text/javascript" src="js/ui.js"></script>
+    <title>NeuroNotes</title>
+</head>
+<body>
+
+    <header class="top-nav">
+        <img class="big-logo" src="img/bigLogo.png" alt="Neuro notes">
+    </header>
+    <main class="main-container">
+        <div class="main-wrapper" id="main_block">
+            <button class="main-button wide" onclick="showRegistrationBlock()"> Зарегистрироваться </button>
+            <button class="main-button medium" onclick="showAuthorizationBlock()"> Войти </button>
+        </div>
+
+
+        <div class="auth-wrapper">
+            <div class="regist-content" id="registration_block" style="display:none">
+                <div class="text-container">
+                    <p> Регистрация </p>
+                    <button id="arrow_button" onclick="hideRegistrationBlock()">
+                        <div class="arrow"> </div>
+                    </button>
+                </div>
+                <form id="registration_form" action="/main" method="get">
+                    <div class="input-container">
+                        <input type="text" placeholder=" " id="reg_user" required>
+                        <p>Имя</p>
+                    </div>
+                    <div class="input-container">
+                        <input type="text" placeholder=" " id="reg_email" required>
+                        <p>Почта</p>
+                    </div>
+                    <div class="input-container">
+                        <input type="password" placeholder=" " id="reg_psw" required>
+                        <p> Пароль </p>
+                    </div>
+                    <button>Зарегистрироваться</button>
+                </form>
+            </div>
+
+            <div class="auth-content" id="authorization_block" style="display:none">
+                <div class="text-container">
+                    <p> Вход </p>
+                    <button id="arrow_button" onclick="hideAuthorizationBlock()">
+                        <div class="arrow"> </div>
+                    </button>
+                </div>
+                <form id="authorization_form" action="/main" method="get">
+                    <div class="input-container">
+                        <input type="text" placeholder=" " id="auth_user" required>
+                        <p>Имя</p>
+                    </div>
+                    <div class="input-container">
+                        <input type="password" placeholder=" " id="auth_psw" required>
+                        <p> Пароль </p>
+                    </div>
+                    <button>Войти</button>
+                </form>
+            </div>
+        </div>
+    </main>
+</body>
+<script>
+document.getElementById("authorization_form").addEventListener('submit', TrySendAuthForm);
+document.getElementById("registration_form").addEventListener('submit', TrySendRegForm);
+</script>
+</html>
+

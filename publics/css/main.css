@@ -1,0 +1,271 @@
+body {
+    font-family: 'Gilroy';
+    font-style: normal;
+    font-size: 24px;
+    color: #000000FF;
+    margin: 0;
+    font-size: 24px;
+}
+
+p {
+    margin: 0;
+    padding 0;
+}
+
+.top-nav {
+    height: 54px;
+    width: 100vw;
+    position: fixed;
+    background-color: #4D4C55FF;
+    color: #FFFFFFFF;
+}
+
+.wrapper-nav {
+    width: 100vw;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+
+.logo {
+    max-height: 40px;
+    margin-left: 80px;
+    margin-top: 4px;
+}
+
+.exit-button {
+    margin-right: 24px;
+    text-decoration: none;
+    border: none;
+    background-color: transparent;
+    transition : all .1s ease-out;
+}
+
+.exit-button:hover {
+    text-decoration: underline;
+}
+
+.main-container {
+  display: flex;
+  justify-content: center;
+  overflow: hidden;
+  height: 100vh;
+}
+
+.wrapper-left, .wrapper-right {
+    height: 100vh;
+    background-color: #FFFFFF00;
+    display: flex;
+    flex-direction: column;
+}
+
+.wrapper-left {
+    flex-direction: row;
+}
+
+.existed-notes {
+    padding-top: 54px;
+    width: 35%;
+    max-width: 220px;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.existed-notes button {
+    margin-left: 20px;
+    width: fit-content;
+    border-radius: 10px;
+    padding: 5px 10px;
+    margin-top: 8px;
+    border: none;
+/*    font-family: 'Gilroy';*/
+    font-size: 18px;
+    font-weight: 500;
+    line-height: 22px;
+    letter-spacing: 0em;
+    background-color: transparent;
+    border: 1px solid transparent;
+    transition : all .2s ease-out;
+}
+
+
+.existed-notes button:hover {
+    border-color: gray;
+}
+
+.existed-notes button.active {
+    color: #FFF;
+    background-color: #3296F3FF;
+}
+
+.existed-projects {
+    display: flex;
+    flex-direction: column;
+    overflow-y: scroll;
+}
+
+.existed-projects button {
+    margin-inline: auto;
+    width: 90%;
+    border-radius: 20px;
+    padding: 5px 10px;
+    margin-top: 8px;
+    border: none;
+/*    font-family: 'Gilroy';*/
+    font-size: 18px;
+    font-weight: 500;
+    line-height: 22px;
+    letter-spacing: 0em;
+    background-color: #999999FF;
+    border: 1px solid transparent;
+    transition : all .2s ease-out;
+}
+
+.projects-box {
+    background-color: #DCE2F2FF;
+    padding-top: 54px;
+    width: 65%;
+    height: 100vh;
+}
+
+.project-content, .create-box {
+    width: 100%;
+    height: 100%;
+}
+
+.cross-exit {
+    position: relative;
+	width: 24px;
+	height: 24px;
+	opacity: 0.6;
+    background-color: transparent;
+    border: none;
+    padding: 0;
+    transition: opacity ease 0.5s;
+	&:hover {
+		opacity: 1;
+	}
+}
+
+.cross-exit::before,
+.cross-exit::after {
+	content: '';
+	position: absolute;
+	top: 10px;
+	display: block;
+	width: 24px;
+	height: 3px;
+	background: #000;
+}
+
+.cross-exit::before {
+	transform: rotate(45deg);
+}
+
+.cross-exit::after {
+	transform: rotate(-45deg);
+}
+
+.vertical-line {
+    margin: 0;
+    border: none;
+    height: 100vh;
+    width: 6px;
+    background-color: gray;
+    cursor: col-resize;
+}
+
+#main_left_side {
+    width: 45%;
+}
+
+#main_right_side {
+    width: 55%;
+}
+
+#graph_render_canvas {
+}
+
+button.wide {
+    width: 456px;
+}
+
+button.medium {
+    width: 216px;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+}
+
+form input[type=text], input[type=password]{
+    width: 366px;
+    padding: 12px 20px;
+    font-size: 18px;
+    border: 2px solid #000000;
+    border-radius: 62px;
+    outline: none;
+}
+
+form button {
+    background: #4D4C55;
+    border-radius: 70px;
+    border: none;
+    margin: auto;
+    color: #FFFFFFFF;
+    font-size: 24px;
+    padding: 12px 24px;
+
+    transition : all .1s ease-out;
+    -wekit-transition : all .1s;
+    -moz-transition : all .1s;
+
+}
+
+form button:hover {
+    background: #4D4C55CF;
+}
+
+form button:active {
+    background: #4D4C55A8;
+}
+
+.input-container {
+    margin-bottom: 24px;
+    position: relative;
+}
+form input:focus ~ p, form input:not(:placeholder-shown) ~ p {
+    transform: translateY(-30px) translateX(27px) scale(0.8);
+    background-color: #FFF;
+    border: none;
+    border-radius: 8px;
+    padding: 2px 20px;
+}
+
+.input-container p {
+    color: gray;
+    font-size: 18px;
+    position: absolute;
+    top: 13px;
+    left: 21px;
+    transition : all .1s ease-out;
+    -wekit-transition : all .1s;
+    -moz-transition : all .1s;
+}
+
+.text-container {
+    font-size: 24px;
+    color: #000000FF;
+    padding-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+}
+.text-container p {
+    margin-left: 20px;
+}
+
+
+
