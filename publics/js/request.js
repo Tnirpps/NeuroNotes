@@ -129,9 +129,20 @@ async function createNewNote(e) {
 
 
 async function getAllMyProjects() {
-    let url = "/serv";
+    let url = "/server";
     let response = await fetch(url, {
-        method: 'GET',
+        method: 'POST',
+        body: '',
+    })
+    .then(response => response.json());
+    return response;
+}
+
+async function getNotes(project) {
+    let url = "/server";
+    let response = await fetch(url, {
+        method: 'POST',
+        body: project,
     })
     .then(response => response.json());
     return response;
@@ -146,9 +157,20 @@ async function updateCreatedProjects() {
     }
     projects = projects.filter((item) => !hasChildProject(el, item));
     console.log(projects);
-    projects.forEach((item) => pushButtonOfProject(el, item));
+    projects.forEach((item) => pushButtonToDOM(el, item, true));
 }
 
 
+async function updateCreatedNotes(project) {
+    let el = document.getElementById("created_notes");
+    let r = await getNotes(project);
+    let notes = new Array;
+    for (let i of r.notes) {
+        notes.push(i[0]);
+    }
+    notes = notes.filter((item) => !hasChildProject(el, item));
+    console.log(notes);
+    notes.forEach((item) => pushButtonToDOM(el, item, false));
+}
 
 

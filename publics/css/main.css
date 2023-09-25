@@ -55,6 +55,7 @@ p {
 
 .wrapper-left, .wrapper-right {
     height: 100vh;
+    padding-top: 52px;
     background-color: #FFFFFF00;
     display: flex;
     flex-direction: column;
@@ -130,7 +131,7 @@ p {
     height: 100vh;
 }
 
-.project-content, .create-box {
+.note-content, .create-box {
     width: 100%;
     height: 100%;
 }
@@ -267,5 +268,23 @@ form input:focus ~ p, form input:not(:placeholder-shown) ~ p {
     margin-left: 20px;
 }
 
+.textarea {
+    border: 1px solid #000000FF;
+    font-family: inherit;
+    font-size: 24;
+    padding: 1px 6px;
+    
+    display: block;
+    width: 90%;
+    margin-inline: auto;
+    overflow: hidden;
+    resize: none;
+    min-height: 40px;
+    line-height: 30px;
+}
+.textarea[contenteditable]:empty::before {
+    content: "Начните писать заметку";
+    color: gray;
+}
 
 

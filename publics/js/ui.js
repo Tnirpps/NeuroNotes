@@ -51,52 +51,29 @@ function showAuthorizationBlock() {
     reg.classList.remove("hidden-form-item");
     reg.style.display='block';
 }
-/*
 
-function hasChildProject(parent, name) {
-    arr = new Array;
-    for (let i of parent.childNodes) {
-        if (i.name == name) {
-            return true;
-        }
-    }
-    return false;
-}
-
-function pushButtonOfProject(parent, text) {
-    let item = document.createElement("button");
-    let maxLen = 15;
-    item.addEventListener("click", setActiveProject);
-    item.textContent = text.length > maxLen?
-        text.substr(0, maxLen - 3) + "...":
-        text;
-    item.name = text
-    parent.appendChild(item);
-
-}
-
-function clearActiveProject() {
-    let projects = document.getElementById("created_projects").getElementsByTagName("button");
+function clearActiveNote() {
+    let projects = document.getElementById("created_notes").getElementsByTagName("button");
     Array.from(projects).forEach((el) => el.classList.remove("active"));
-    document.getElementById("create_new_note").name = ""
 }
 
-function setActiveProject(el) {
-    clearActiveProject();
+function setActiveNote(el) {
+    clearActiveNote();
     el.target.classList.add("active");
-    document.getElementById("create_box").style.display = "none";
-    document.getElementById("project_content").style.display = "block";
+    //document.getElementById("create_box").style.display = "none";
+    //document.getElementById("project_content").style.display = "block";
     document.getElementById("create_new_note").name = el.target.name
+    document.getElementById("note_text_content").style.display = "block";
 }
 
+/*
 function closeCurrentProject(el) {
     clearActiveProject();
     document.getElementById("create_box").style.display = "block";
     document.getElementById("project_content").style.display = "none";
 
 }
-
-    */
+*/
 
 function hasChildProject(parent, name) {
     arr = new Array;
@@ -108,10 +85,14 @@ function hasChildProject(parent, name) {
     return false;
 }
 
-function pushButtonOfProject(parent, text) {
+function pushButtonToDOM(parent, text, project) {
     let item = document.createElement("button");
     let maxLen = 15;
-    item.addEventListener("click", setActiveProject);
+    if (project) {
+        item.addEventListener("click", setActiveProject);
+    } else {
+        item.addEventListener("click", setActiveNote);
+    }
     item.textContent = text.length > maxLen?
         text.substr(0, maxLen - 3) + "...":
         text;
@@ -120,14 +101,30 @@ function pushButtonOfProject(parent, text) {
 
 }
 
-function setActiveProject(el) {
-    document.getElementById("create_box").style.display = "none";
-    document.getElementById("project_content").style.display = "block";
-    document.getElementById("create_new_note").name = el.target.name
+function removeAllChidren(el) {
+    while (el.lastElementChild) {
+        el.removeChild(el.lastElementChild);
+    }
 }
 
-function closeCurrentProject(el) {
-    document.getElementById("create_box").style.display = "block";
-    document.getElementById("project_content").style.display = "none";
+function setActiveProject(el) {
+    document.getElementById("create_box").style.display = "none";
+    document.getElementById("note_content").style.display = "block";
+    document.getElementById("create_new_note").name = el.target.name;
+    updateCreatedNotes(el.target.name);
 }
+
+function closeCurrentNote(el) {
+    document.getElementById("create_box").style.display = "block";
+    document.getElementById("note_content").style.display = "none";
+    document.getElementById("note_text_content").style.display = "none";
+    removeAllChidren(document.getElementById("created_notes"));
+}
+
+
+
+
+
+
+
 

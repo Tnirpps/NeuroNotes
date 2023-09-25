@@ -95,7 +95,7 @@ int main() {
         return "ok!";
     });
 
-    CROW_ROUTE(app, "/serv").methods(crow::HTTPMethod::GET, crow::HTTPMethod::POST)
+    CROW_ROUTE(app, "/server").methods(crow::HTTPMethod::POST) 
         ([&](const crow::request& req) {
         crow::json::wvalue x;
         auto& ctx = app.get_context<crow::CookieParser>(req);
@@ -106,54 +106,76 @@ int main() {
             x["error"] = "unauthorized user";
             return x;
         }
-        if (req.method == crow::HTTPMethod::GET) {
-            
+        if (req.body.size() == 0) {
             x["projects"] = DB::Project::Select({DB::Project::name}).Where({
                     DB::Project::ownerId == DB::Int(rc[0][0]),
                     });
             x["status"] = "ok";
-            return x;
-
-        } else if (req.method == crow::HTTPMethod::POST) {
-            crow::json::rvalue query = crow::json::load(req.body);
-            if (query["type"] == "Project") {
-                if (req.body.size() > 100) {
-                    x["status"] = "fail";
-                    x["error"] = "the size of the name exceeded 100 characters";
-                    return x;
-                }
-
-                DB::Project::Insert().Where({
-                        DB::Project::name    == DB::Str(query["data"].s()), /*TODO: escape*/
-                        DB::Project::date    == DB::Str(GetDateAsStr()),
-                        DB::Project::ownerId == DB::Int(rc[0][0]),
-                        });
-
-                x["status"] = "ok";
-            } else if (query["type"] == "Note") {
-                auto rc = DB::Project::Select({DB::Project::id}).Where({DB::Project::name == DB::Str(query["parent"].s())});
-                if (rc.empty() || rc[0].empty()) {
-                    x["status"] = "fail";
-                    x["error"] = "no such parent projest to create new note";
-                    return x;
-                }
-
-                DB::Note::Insert().Where({
-                        DB::Note::name == DB::Str(query["data"].s()),
-                        DB::Note::projectId == DB::Int(rc[0][0]),
-                        DB::Note::date == DB::Str(GetDateAsStr()),
-                        DB::Note::body == DB::Str(""),
-                        });
-                x["status"] = "ok";
-            } else {
-                x["status"] = "fail";
-                std:: cout << "\n\n\tERROR\n\n";
-            }
         } else {
-            assert("unreacheble" && 0);
+            auto rc = DB::Project::Select({DB::Project::id}).Where({
+                        DB::Project::name == DB::Str(req.body),
+                    });
+            if (rc.empty() || rc[0].empty()) {
+                x["status"] = "fail";
+            } else {
+                std::cout << "FIND::::\t" << rc[0][0] << "\n";
+                x["notes"] = DB::Note::Select({DB::Note::name}).Where({
+                        DB::Note::projectId == DB::Int(rc[0][0]),
+                        });
+                x["status"] = "ok";
+            }
         }
         return x;
-                 
+
+    });
+
+
+    CROW_ROUTE(app, "/serv").methods(crow::HTTPMethod::POST)
+        ([&](const crow::request& req) {
+        crow::json::wvalue x;
+        auto& ctx = app.get_context<crow::CookieParser>(req);
+        std::string apiKey = ctx.get_cookie("auth-key");
+        auto rc = DB::User::Select({DB::User::id}).Where({DB::User::apiKey == DB::Str(apiKey)});
+        if (rc.empty() || rc[0].empty()) {
+            x["status"] = "fail";
+            x["error"] = "unauthorized user";
+            return x;
+        }
+        crow::json::rvalue query = crow::json::load(req.body);
+        if (query["type"] == "Project") {
+            if (req.body.size() > 100) {
+                x["status"] = "fail";
+                x["error"] = "the size of the name exceeded 100 characters";
+                return x;
+            }
+
+            DB::Project::Insert().Where({
+                    DB::Project::name    == DB::Str(query["data"].s()), /*TODO: escape*/
+                    DB::Project::date    == DB::Str(GetDateAsStr()),
+                    DB::Project::ownerId == DB::Int(rc[0][0]),
+                    });
+
+            x["status"] = "ok";
+        } else if (query["type"] == "Note") {
+            auto rc = DB::Project::Select({DB::Project::id}).Where({DB::Project::name == DB::Str(query["parent"].s())});
+            if (rc.empty() || rc[0].empty()) {
+                x["status"] = "fail";
+                x["error"] = "no such parent projest to create new note";
+                return x;
+            }
+
+            DB::Note::Insert().Where({
+                    DB::Note::name == DB::Str(query["data"].s()),
+                    DB::Note::projectId == DB::Int(rc[0][0]),
+                    DB::Note::date == DB::Str(GetDateAsStr()),
+                    DB::Note::body == DB::Str(""),
+                    });
+            x["status"] = "ok";
+        } else {
+            x["status"] = "fail";
+            std:: cout << "\n\n\tERROR\n\n";
+        }
+        return x;
     });
 
     CROW_ROUTE(app, "/logout")([&](const crow::request& req, crow::response& res){
