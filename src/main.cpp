@@ -118,8 +118,7 @@ int main() {
             if (rc.empty() || rc[0].empty()) {
                 x["status"] = "fail";
             } else {
-                std::cout << "FIND::::\t" << rc[0][0] << "\n";
-                x["notes"] = DB::Note::Select({DB::Note::name}).Where({
+                x["notes"] = DB::Note::Select({DB::Note::name, DB::Note::body}).Where({
                         DB::Note::projectId == DB::Int(rc[0][0]),
                         });
                 x["status"] = "ok";
@@ -157,20 +156,25 @@ int main() {
 
             x["status"] = "ok";
         } else if (query["type"] == "Note") {
-            auto rc = DB::Project::Select({DB::Project::id}).Where({DB::Project::name == DB::Str(query["parent"].s())});
-            if (rc.empty() || rc[0].empty()) {
-                x["status"] = "fail";
-                x["error"] = "no such parent projest to create new note";
-                return x;
-            }
+            if (!query.has("content")) {
+                auto rc = DB::Project::Select({DB::Project::id}).Where({DB::Project::name == DB::Str(query["parent"].s())});
+                if (rc.empty() || rc[0].empty()) {
+                    x["status"] = "fail";
+                    x["error"] = "no such parent projest to create new note";
+                    return x;
+                }
 
-            DB::Note::Insert().Where({
-                    DB::Note::name == DB::Str(query["data"].s()),
-                    DB::Note::projectId == DB::Int(rc[0][0]),
-                    DB::Note::date == DB::Str(GetDateAsStr()),
-                    DB::Note::body == DB::Str(""),
-                    });
-            x["status"] = "ok";
+                DB::Note::Insert().Where({
+                        DB::Note::name == DB::Str(query["data"].s()),
+                        DB::Note::projectId == DB::Int(rc[0][0]),
+                        DB::Note::date == DB::Str(GetDateAsStr()),
+                        DB::Note::body == DB::Str(""),
+                        });
+                x["status"] = "ok";
+            } else {
+                std::cout << "update database\n";
+                x["status"] = "ok";
+            }
         } else {
             x["status"] = "fail";
             std:: cout << "\n\n\tERROR\n\n";

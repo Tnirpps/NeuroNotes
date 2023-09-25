@@ -43,7 +43,12 @@
                     <button id="create_new_note" onClick="createNewNote(this)"> Добавить </button>       
                     <br>
                     <br>
-                    <span class="textarea" id="note_text_content" role="textbox" contenteditable style="display:none"></span>
+                    <div id="note_inner_content" class="note-content-box"style="display:none">
+                        <span class="textarea" id="note_text_content" role="textbox" contenteditable ></span>
+                        <br>
+                        <button id="update_note_text" name="" onClick="updateNoteText(this)"> сохранить </button>
+                        
+                    </div>
                 </div>
             </div>
         </div>

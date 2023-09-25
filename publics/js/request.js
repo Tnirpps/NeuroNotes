@@ -124,6 +124,7 @@ async function createNewNote(e) {
     if (JSON.stringify(response).length == 0 || response.status != "ok") {
         console.log("Ошибка создания карточки")
     }
+    updateCreatedNotes(e.name);
     return response;
 }
 
@@ -166,11 +167,23 @@ async function updateCreatedNotes(project) {
     let r = await getNotes(project);
     let notes = new Array;
     for (let i of r.notes) {
-        notes.push(i[0]);
+        let tmp = new Array;
+        notes.push(i);
     }
     notes = notes.filter((item) => !hasChildProject(el, item));
     console.log(notes);
-    notes.forEach((item) => pushButtonToDOM(el, item, false));
+    notes.forEach((item) => pushButtonToDOM(el, item[0], false, item[1]));
 }
 
+async function updateNoteText(el) {
+    obj = new Object;
+    obj.type = "Note";
+    console.log(el);
+    obj.name = el.name;
+    obj.content = document.getElementById("note_text_content").innerHTML;
+    let r = await SendPostRequest("/serv", obj);
+    if (JSON.stringify(r).length != 0 && r.status == "ok") {
+        el.title = obj.content;
+    }
+}
 

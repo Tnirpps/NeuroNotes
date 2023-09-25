@@ -60,10 +60,10 @@ function clearActiveNote() {
 function setActiveNote(el) {
     clearActiveNote();
     el.target.classList.add("active");
-    //document.getElementById("create_box").style.display = "none";
-    //document.getElementById("project_content").style.display = "block";
     document.getElementById("create_new_note").name = el.target.name
-    document.getElementById("note_text_content").style.display = "block";
+    document.getElementById("note_inner_content").style.display = "block";
+    document.getElementById("update_note_text").name = el.target.name;
+    document.getElementById("note_text_content").innerHTML = el.target.title;
 }
 
 /*
@@ -85,13 +85,14 @@ function hasChildProject(parent, name) {
     return false;
 }
 
-function pushButtonToDOM(parent, text, project) {
+function pushButtonToDOM(parent, text, project, content="") {
     let item = document.createElement("button");
     let maxLen = 15;
     if (project) {
         item.addEventListener("click", setActiveProject);
     } else {
         item.addEventListener("click", setActiveNote);
+        item.title = content;
     }
     item.textContent = text.length > maxLen?
         text.substr(0, maxLen - 3) + "...":
@@ -117,7 +118,7 @@ function setActiveProject(el) {
 function closeCurrentNote(el) {
     document.getElementById("create_box").style.display = "block";
     document.getElementById("note_content").style.display = "none";
-    document.getElementById("note_text_content").style.display = "none";
+    document.getElementById("note_inner_content").style.display = "none";
     removeAllChidren(document.getElementById("created_notes"));
 }
 
