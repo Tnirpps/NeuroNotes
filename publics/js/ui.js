@@ -60,7 +60,6 @@ function clearActiveNote() {
 function setActiveNote(el) {
     clearActiveNote();
     el.target.classList.add("active");
-    document.getElementById("create_new_note").name = el.target.name
     document.getElementById("note_inner_content").style.display = "block";
     document.getElementById("update_note_text").name = el.target.name;
     document.getElementById("note_text_content").innerHTML = el.target.title;
@@ -112,6 +111,7 @@ function setActiveProject(el) {
     document.getElementById("create_box").style.display = "none";
     document.getElementById("note_content").style.display = "block";
     document.getElementById("create_new_note").name = el.target.name;
+    document.getElementById("project_box").name = el.target.name;
     updateCreatedNotes(el.target.name);
 }
 

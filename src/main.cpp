@@ -134,12 +134,13 @@ int main() {
         crow::json::wvalue x;
         auto& ctx = app.get_context<crow::CookieParser>(req);
         std::string apiKey = ctx.get_cookie("auth-key");
-        auto rc = DB::User::Select({DB::User::id}).Where({DB::User::apiKey == DB::Str(apiKey)});
-        if (rc.empty() || rc[0].empty()) {
+        auto user_v = DB::User::Select({DB::User::id}).Where({DB::User::apiKey == DB::Str(apiKey)});
+        if (user_v.empty() || user_v[0].empty()) {
             x["status"] = "fail";
             x["error"] = "unauthorized user";
             return x;
         }
+        std::string userId = user_v[0][0];
         crow::json::rvalue query = crow::json::load(req.body);
         if (query["type"] == "Project") {
             if (req.body.size() > 100) {
@@ -151,13 +152,16 @@ int main() {
             DB::Project::Insert().Where({
                     DB::Project::name    == DB::Str(query["data"].s()), /*TODO: escape*/
                     DB::Project::date    == DB::Str(GetDateAsStr()),
-                    DB::Project::ownerId == DB::Int(rc[0][0]),
+                    DB::Project::ownerId == DB::Int(userId),
                     });
 
             x["status"] = "ok";
         } else if (query["type"] == "Note") {
             if (!query.has("content")) {
-                auto rc = DB::Project::Select({DB::Project::id}).Where({DB::Project::name == DB::Str(query["parent"].s())});
+                auto rc = DB::Project::Select({DB::Project::id}).Where({
+                        DB::Project::name == DB::Str(query["parent"].s()),
+                        DB::Project::ownerId == DB::Int(userId),
+                        });
                 if (rc.empty() || rc[0].empty()) {
                     x["status"] = "fail";
                     x["error"] = "no such parent projest to create new note";
@@ -172,7 +176,19 @@ int main() {
                         });
                 x["status"] = "ok";
             } else {
-                std::cout << "update database\n";
+                auto rc = DB::Project::Select({DB::Project::id}).Where({
+                        DB::Project::name == DB::Str(query["parent"].s()),
+                        DB::Project::ownerId == DB::Int(userId),
+                        });
+                if (rc.empty() || rc[0].empty()) {
+                    x["status"] = "fail";
+                    x["error"] = "no such parent projest to create new note";
+                    return x;
+                }
+                DB::Note::Update({DB::Note::body == DB::Str(query["content"].s())}).Where({
+                        DB::Note::name == DB::Str(query["name"].s()),
+                        DB::Note::projectId == DB::Int(rc[0][0]),
+                        });
                 x["status"] = "ok";
             }
         } else {

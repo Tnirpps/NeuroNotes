@@ -101,6 +101,43 @@ bool DB::InsertQuery::Where(const std::vector<Condition>& v) {
     return true;
 }
 
+
+
+std::string DB::UpdateQuery::CreateSqlQueryString(const std::vector<Condition>& c) {
+    std::string query = fmt::format("update {} set ", tableName);
+    if (res.empty()) return "ERROR";
+    for (size_t i = 0; i + 1 < res.size(); ++i) {
+        query += res[i].GetEqForm() + ", ";
+    }
+    query += res.back().GetEqForm();
+    if (!c.empty()) {
+        query += " where ";
+
+        for (size_t i = 0; i + 1 < c.size(); ++i) {
+            query += (c[i].GetEqForm() + " AND ");
+        }
+        query += c.back().GetEqForm();
+    }
+    std::cout << "CREATED QUERY:: " << query << "\n";
+    return query;
+}    
+
+bool DB::UpdateQuery::Where(const std::vector<Condition>& v) {
+    auto c = Connect();
+    pqxx::work tx{c};
+    auto res = tx.exec(CreateSqlQueryString(v));
+    tx.commit();
+    c.close();
+    return true;
+}
+
+pqxx::connection DB::UpdateQuery::Connect() {
+    return pqxx::connection(fmt::format(
+                "user={} password={} host={} port={} dbname={}",
+                user, password, host, port, dbName
+                ));
+}
+
 DB::InsertQuery DB::User::Insert() {
     return InsertQuery(tableName);
 }
@@ -145,6 +182,10 @@ DB::InsertQuery DB::Note::Insert() {
 
 DB::SelectQuery DB::Note::Select(const std::vector<Column>& queryCols) {
     return SelectQuery(tableName, queryCols);
+}
+
+DB::UpdateQuery DB::Note::Update(const std::vector<Condition>& queryCols) {
+    return UpdateQuery(tableName, queryCols);
 }
 
 const std::string DB::Note::tableName = "notes";

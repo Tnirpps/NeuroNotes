@@ -170,7 +170,7 @@ async function updateCreatedNotes(project) {
         let tmp = new Array;
         notes.push(i);
     }
-    notes = notes.filter((item) => !hasChildProject(el, item));
+    notes = notes.filter((item) => !hasChildProject(el, item[0]));
     console.log(notes);
     notes.forEach((item) => pushButtonToDOM(el, item[0], false, item[1]));
 }
@@ -178,12 +178,13 @@ async function updateCreatedNotes(project) {
 async function updateNoteText(el) {
     obj = new Object;
     obj.type = "Note";
-    console.log(el);
+    obj.parent = document.getElementById("project_box").name;
     obj.name = el.name;
     obj.content = document.getElementById("note_text_content").innerHTML;
     let r = await SendPostRequest("/serv", obj);
+    console.log(JSON.stringify(r));
     if (JSON.stringify(r).length != 0 && r.status == "ok") {
-        el.title = obj.content;
+        document.getElementById("created_notes").getElementsByClassName("active")[0].title = obj.content;
     }
 }
 

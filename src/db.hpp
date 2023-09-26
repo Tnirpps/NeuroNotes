@@ -7,8 +7,6 @@
 #include <pqxx/pqxx>
 #include <fmt/format.h>
 
-
-
 namespace DB {
     const std::string user     = "tnirpps";
     const std::string password = "1234";
@@ -93,6 +91,19 @@ namespace DB {
 
     };
 
+    class UpdateQuery {
+        private:
+            std::string tableName;
+            std::vector<Condition> res;
+            pqxx::connection Connect();
+
+        public:
+            std::string CreateSqlQueryString(const std::vector<Condition>& v);
+            UpdateQuery(const std::string& s, const std::vector<Condition>& v): tableName(s), res(v) {}
+
+            bool Where(const std::vector<Condition>& v);
+    };
+
     class User {
         
         static const std::string tableName;
@@ -141,6 +152,7 @@ namespace DB {
             static const IntColumn projectId;
 
             static SelectQuery Select(const std::vector<Column>& queryCols);
+            static UpdateQuery Update(const std::vector<Condition>& queryCols);
             static InsertQuery Insert();
     };
 };
