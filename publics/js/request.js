@@ -47,7 +47,7 @@ async function TrySendRegForm(e) {
 
     rc = await send_registration_request();
     console.log(rc)
-    if (rc.length != 0) {
+    if (rc.length != 0) { // TODO: parse like JSON and check status == ok
         isDoneR = true;
         document.getElementById("registration_form").getElementsByTagName("button")[0].click();
     } else {
@@ -101,7 +101,7 @@ async function SendPostRequest(url, obj) {
 async function createNewProject() {
     let obj = new Object();
     obj.type = "Project";
-    obj.data = document.getElementById("project_name_input_field").value;
+    obj.name = document.getElementById("project_name_input_field").value;
                document.getElementById("project_name_input_field").value = "";
     let response = await SendPostRequest("/serv", obj);
     if (JSON.stringify(response).length != 0 && response.status == "ok") {
@@ -153,7 +153,7 @@ async function updateCreatedProjects() {
     let el = document.getElementById("created_projects");
     let r = await getAllMyProjects();
     let projects = new Array;
-    for (let i of r.projects) {
+    for (let i of r.body) {
         projects.push(i[0]);
     }
     projects = projects.filter((item) => !hasChildProject(el, item));
@@ -166,7 +166,7 @@ async function updateCreatedNotes(project) {
     let el = document.getElementById("created_notes");
     let r = await getNotes(project);
     let notes = new Array;
-    for (let i of r.notes) {
+    for (let i of r.body) {
         let tmp = new Array;
         notes.push(i);
     }

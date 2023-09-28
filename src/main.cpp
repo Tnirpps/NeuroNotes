@@ -15,27 +15,32 @@
 #include "secret.hpp"
 
 
+void               sendFile(crow::response& res, std::string filename, std::string content_type);
+void               sendHtml(crow::response& res, std::string filename);
+void               sendStyle(crow::response& res, std::string filename);
+void               sendScript(crow::response& res, std::string filename);
+void               sendImage(crow::response& res, std::string filename);
+std::string        verifyAuthorization(const crow::request& req);
+std::string        createNewUser(const crow::request& req);
+std::string        getAuthUserId(crow::App<crow::CookieParser>& app, const crow::request& req);
+std::string        getUserIdByApiKey(const std::string& apiKey);
+bool               checkAuthorization(crow::App<crow::CookieParser>& app, const crow::request& req);
 
-void sendFile(crow::response& res, std::string filename, std::string content_type);
-void sendHtml(crow::response& res, std::string filename);
-void sendStyle(crow::response& res, std::string filename);
-void sendScript(crow::response& res, std::string filename);
-void sendImage(crow::response& res, std::string filename);
-std::string verifyAuthorization(const crow::request& req);
-std::string createNewUser(const crow::request& req);
+crow::json::wvalue sendErrorResponse(const std::string& errorMsg);
+crow::json::wvalue sendResponse();
+crow::json::wvalue sendResponse(const std::vector<std::vector<std::string>>& body);
 
+crow::json::wvalue createNewProject(const std::string& name, const std::string& userId);
+crow::json::wvalue createNewNote(const std::string& name, const std::string& projectName, const std::string& userId, const std::string& body);
+crow::json::wvalue updateNote(const std::string& name, const std::string& projectName, const std::string& userId, const std::string& body);
+
+crow::json::wvalue setApiKeyForUser(crow::App<crow::CookieParser>& app, const crow::request& req, const std::string& userId);
 
 int main() {
     crow::App<crow::CookieParser> app;
 
     CROW_ROUTE(app, "/")([&](const crow::request& req, crow::response& res){
-        auto& ctx = app.get_context<crow::CookieParser>(req);
-        // Read cookies with get_cookie
-        std::string apiKey = ctx.get_cookie("auth-key");
-        if (DB::User::Select({DB::User::id}).Where({DB::User::apiKey == DB::Str(apiKey)}).empty()) {
-//        if (db.SelectUserByApiKey(apiKey).empty()) {
-            return sendHtml(res, "index");
-        }
+        if (!checkAuthorization(app, req)) return sendHtml(res, "index");
         res.redirect("/main");
         res.end();
     });
@@ -53,149 +58,68 @@ int main() {
     });
 
     CROW_ROUTE(app, "/main")([&](const crow::request& req, crow::response& res){
-        auto& ctx = app.get_context<crow::CookieParser>(req);
-        // Read cookies with get_cookie
-        std::string apiKey = ctx.get_cookie("auth-key");
-        if (!DB::User::Select({DB::User::id}).Where({DB::User::apiKey == DB::Str(apiKey)}).empty()) {
-//        if (!db.SelectUserByApiKey(apiKey).empty()) {
-            return sendHtml(res, "main");
-        }
+        if (checkAuthorization(app, req)) return sendHtml(res, "main");
         res.redirect("/");
         res.end();
     });
 
     CROW_ROUTE(app, "/auth").methods("POST"_method)([&](const crow::request& req) {
-        std::string username = verifyAuthorization(req);
-        if (username.empty()) return "";
-
-        auto& ctx = app.get_context<crow::CookieParser>(req);
-        // Store cookies with set_cookie
-        ctx.set_cookie("auth-key", DB::User::Select({DB::User::apiKey}).Where({DB::User::username == DB::Str(username)})[0][0])
-                                             // configure additional parameters
-        .path("/")
-        .max_age(60 * 60) // one hour
-        .httponly()
-        .same_site(crow::CookieParser::Cookie::SameSitePolicy::Lax);
-        return "ok!";
+        std::string userId = verifyAuthorization(req);
+        if (userId.empty()) return sendErrorResponse("your api-key is not valid");
+        return setApiKeyForUser(app, req, userId);
     });
 
 
     CROW_ROUTE(app, "/reg").methods("POST"_method)([&](const crow::request& req) {
-        std::string username = createNewUser(req);
-        if (username.empty()) return "";
-        auto& ctx = app.get_context<crow::CookieParser>(req);
-        // Store cookies with set_cookie
-        ctx.set_cookie("auth-key", DB::User::Select({DB::User::apiKey}).Where({DB::User::username == DB::Str(username)})[0][0])
-        //ctx.set_cookie("auth-key", db.SelectApiKey(username))
-          // configure additional parameters
-          .path("/")
-          .max_age(60 * 60) // one hour
-          .httponly()
-          .same_site(crow::CookieParser::Cookie::SameSitePolicy::Lax);
-        return "ok!";
+        std::string userId = createNewUser(req);
+        if (userId.empty()) return sendErrorResponse("cannot create such user");
+        return setApiKeyForUser(app, req, userId);
     });
+
 
     CROW_ROUTE(app, "/server").methods(crow::HTTPMethod::POST) 
         ([&](const crow::request& req) {
-        crow::json::wvalue x;
-        auto& ctx = app.get_context<crow::CookieParser>(req);
-        std::string apiKey = ctx.get_cookie("auth-key");
-        auto rc = DB::User::Select({DB::User::id}).Where({DB::User::apiKey == DB::Str(apiKey)});
-        if (rc.empty() || rc[0].empty()) {
-            x["status"] = "fail";
-            x["error"] = "unauthorized user";
-            return x;
-        }
+        std::string userId = getAuthUserId(app, req);
+        if (userId.empty()) return sendErrorResponse("unauthorized user");
         if (req.body.size() == 0) {
-            x["projects"] = DB::Project::Select({DB::Project::name}).Where({
-                    DB::Project::ownerId == DB::Int(rc[0][0]),
-                    });
-            x["status"] = "ok";
+            return sendResponse(
+                    DB::Project::Select({DB::Project::name}).Where({
+                        DB::Project::ownerId == DB::Int(userId),
+                        })
+                    );
         } else {
             auto rc = DB::Project::Select({DB::Project::id}).Where({
                         DB::Project::name == DB::Str(req.body),
                     });
-            if (rc.empty() || rc[0].empty()) {
-                x["status"] = "fail";
-            } else {
-                x["notes"] = DB::Note::Select({DB::Note::name, DB::Note::body}).Where({
-                        DB::Note::projectId == DB::Int(rc[0][0]),
-                        });
-                x["status"] = "ok";
-            }
+            if (rc.empty() || rc[0].empty()) return sendErrorResponse("such Project does not exist");
+            return sendResponse(
+                DB::Note::Select({DB::Note::name, DB::Note::body}).Where({
+                    DB::Note::projectId == DB::Int(rc[0][0]),
+                    })
+                );
         }
-        return x;
-
+        return sendErrorResponse("invalid request arguments");
     });
 
 
     CROW_ROUTE(app, "/serv").methods(crow::HTTPMethod::POST)
         ([&](const crow::request& req) {
-        crow::json::wvalue x;
-        auto& ctx = app.get_context<crow::CookieParser>(req);
-        std::string apiKey = ctx.get_cookie("auth-key");
-        auto user_v = DB::User::Select({DB::User::id}).Where({DB::User::apiKey == DB::Str(apiKey)});
-        if (user_v.empty() || user_v[0].empty()) {
-            x["status"] = "fail";
-            x["error"] = "unauthorized user";
-            return x;
-        }
-        std::string userId = user_v[0][0];
+        std::string userId = getAuthUserId(app, req);
+        if (userId.empty()) return sendErrorResponse("unauthorized user");
         crow::json::rvalue query = crow::json::load(req.body);
+        if (!query.has("type")) return sendErrorResponse("bad reques");
+
         if (query["type"] == "Project") {
-            if (req.body.size() > 100) {
-                x["status"] = "fail";
-                x["error"] = "the size of the name exceeded 100 characters";
-                return x;
-            }
-
-            DB::Project::Insert().Where({
-                    DB::Project::name    == DB::Str(query["data"].s()), /*TODO: escape*/
-                    DB::Project::date    == DB::Str(GetDateAsStr()),
-                    DB::Project::ownerId == DB::Int(userId),
-                    });
-
-            x["status"] = "ok";
-        } else if (query["type"] == "Note") {
-            if (!query.has("content")) {
-                auto rc = DB::Project::Select({DB::Project::id}).Where({
-                        DB::Project::name == DB::Str(query["parent"].s()),
-                        DB::Project::ownerId == DB::Int(userId),
-                        });
-                if (rc.empty() || rc[0].empty()) {
-                    x["status"] = "fail";
-                    x["error"] = "no such parent projest to create new note";
-                    return x;
-                }
-
-                DB::Note::Insert().Where({
-                        DB::Note::name == DB::Str(query["data"].s()),
-                        DB::Note::projectId == DB::Int(rc[0][0]),
-                        DB::Note::date == DB::Str(GetDateAsStr()),
-                        DB::Note::body == DB::Str(""),
-                        });
-                x["status"] = "ok";
-            } else {
-                auto rc = DB::Project::Select({DB::Project::id}).Where({
-                        DB::Project::name == DB::Str(query["parent"].s()),
-                        DB::Project::ownerId == DB::Int(userId),
-                        });
-                if (rc.empty() || rc[0].empty()) {
-                    x["status"] = "fail";
-                    x["error"] = "no such parent projest to create new note";
-                    return x;
-                }
-                DB::Note::Update({DB::Note::body == DB::Str(query["content"].s())}).Where({
-                        DB::Note::name == DB::Str(query["name"].s()),
-                        DB::Note::projectId == DB::Int(rc[0][0]),
-                        });
-                x["status"] = "ok";
-            }
-        } else {
-            x["status"] = "fail";
-            std:: cout << "\n\n\tERROR\n\n";
+            return createNewProject(query["name"].s(), userId);
         }
-        return x;
+        if (query["type"] == "Note") {
+            if (!query.has("content")) {
+                return createNewNote(query["data"].s(), query["parent"].s(), userId, "");
+            } else {
+                return updateNote(query["name"].s(), query["parent"].s(), userId, query["content"].s());
+            }
+        }
+        return sendErrorResponse("unknown request Type");
     });
 
     CROW_ROUTE(app, "/logout")([&](const crow::request& req, crow::response& res){
@@ -263,10 +187,10 @@ std::string verifyAuthorization(const crow::request& req) {
     std::string password = d_mycreds.substr(found+1);
 
     CodeStr(password);
-    auto rc = DB::User::Select({DB::User::password}).Where({DB::User::username == DB::Str(username)}); 
+    auto rc = DB::User::Select({DB::User::id, DB::User::password}).Where({DB::User::username == DB::Str(username)}); 
     if (!password.empty() && !rc.empty() && !rc[0].empty() && 
-            password == rc[0][0]) /*db.SelectPassword(username))*/ {
-        return username;
+            password == rc[0][1]) /*db.SelectPassword(username))*/ {
+        return rc[0][0];
     }
 
     return "";
@@ -285,29 +209,114 @@ std::string createNewUser(const crow::request& req) {
     std::string email = d_mycreds.substr(username.size() + 1, found - (username.size() + 1));
     std::string password = d_mycreds.substr(found + 1);
 
-    CodeStr(password);
+    if (DB::User::Select({DB::User::id}).Where({DB::User::username == DB::Str(username)}).empty()) {
+        CodeStr(password);
 
-    std::string apiKey = GenApiKey(username);
-    std::string date = GetDateAsStr();
-    if (DB::User::Insert().Where({
-                DB::User::username == DB::Str(username),
-                DB::User::password == DB::Str(password),
-                DB::User::apiKey == DB::Str(apiKey),
-                DB::User::email == DB::Str(email),
-                DB::User::date == DB::Str(date),
-                })) {
-    //if (db.CreateUser(username, password, apiKey, date, email)) {
-        return username;
+        std::string apiKey = GenApiKey(username);
+        std::string date = GetDateAsStr();
+        DB::User::Insert().Where({
+                    DB::User::username == DB::Str(username),
+                    DB::User::password == DB::Str(password),
+                    DB::User::apiKey == DB::Str(apiKey),
+                    DB::User::email == DB::Str(email),
+                    DB::User::date == DB::Str(date),
+                    });
+            //if (db.CreateUser(username, password, apiKey, date, email)) {
+        return DB::User::Select({DB::User::id}).Where({DB::User::username == DB::Str(username)})[0][0];
     }
+
     return "";
 }
 
 
+std::string getUserIdByApiKey(const std::string& apiKey) {
+    auto rc = DB::User::Select({DB::User::id}).Where({DB::User::apiKey == DB::Str(apiKey)});
+    if (rc.empty() || rc[0].empty()) return "";
+    return rc[0][0];
+}
 
+std::string getAuthUserId(crow::App<crow::CookieParser>& app, const crow::request& req) {
+    auto& ctx = app.get_context<crow::CookieParser>(req);
+    std::string apiKey = ctx.get_cookie("auth-key");
+    if (apiKey.empty()) return "";
+    return getUserIdByApiKey(apiKey);
+}
 
+bool checkAuthorization(crow::App<crow::CookieParser>& app, const crow::request& req) {
+    return !getAuthUserId(app, req).empty();
+}
 
+crow::json::wvalue sendErrorResponse(const std::string& errorMsg){
+    crow::json::wvalue x;
+    x["status"] = "fail";
+    x["error"] = errorMsg;
+    return x;
+}
 
+crow::json::wvalue sendResponse(const std::vector<std::vector<std::string>>& body){
+    crow::json::wvalue x;
+    x["status"] = "ok";
+    x["body"] = body;
+    return x;
+}
 
+crow::json::wvalue sendResponse(){
+    crow::json::wvalue x;
+    x["status"] = "ok";
+    return x;
+}
 
+crow::json::wvalue createNewProject(const std::string& name, const std::string& userId) {
+    if (name.size() > 100) return sendErrorResponse("the size of the name exceeded 100 characters");
 
+    DB::Project::Insert().Where({
+            DB::Project::name    == DB::Str(name),
+            DB::Project::date    == DB::Str(GetDateAsStr()),
+            DB::Project::ownerId == DB::Int(userId),
+            });
 
+    return sendResponse();
+
+}
+
+crow::json::wvalue createNewNote(const std::string& name, const std::string& projectName, const std::string& userId, const std::string& body) {
+    auto rc = DB::Project::Select({DB::Project::id}).Where({
+            DB::Project::name == DB::Str(projectName),
+            DB::Project::ownerId == DB::Int(userId),
+            });
+    if (rc.empty() || rc[0].empty()) return sendErrorResponse("no such parent projest to create new note");
+
+    DB::Note::Insert().Where({
+            DB::Note::name == DB::Str(name),
+            DB::Note::projectId == DB::Int(rc[0][0]),
+            DB::Note::date == DB::Str(GetDateAsStr()),
+            DB::Note::body == DB::Str(""),
+            });
+    return sendResponse();
+}
+
+crow::json::wvalue updateNote(const std::string& name, const std::string& projectName, const std::string& userId, const std::string& body) {
+    auto rc = DB::Project::Select({DB::Project::id}).Where({
+            DB::Project::name == DB::Str(projectName),
+            DB::Project::ownerId == DB::Int(userId),
+            });
+    if (rc.empty() || rc[0].empty()) return sendErrorResponse("no such parent projest to create new note");
+
+    DB::Note::Update({DB::Note::body == DB::Str(body)}).Where({
+            DB::Note::name == DB::Str(name),
+            DB::Note::projectId == DB::Int(rc[0][0]),
+            });
+    return sendResponse();
+}
+
+crow::json::wvalue setApiKeyForUser(crow::App<crow::CookieParser>& app, const crow::request& req, const std::string& userId) {
+    auto& ctx = app.get_context<crow::CookieParser>(req);
+    // Store cookies with set_cookie
+    ctx.set_cookie("auth-key", DB::User::Select({DB::User::apiKey}).Where({DB::User::id == DB::Int(userId)})[0][0])
+        // configure additional parameters
+        .path("/")
+        .max_age(60 * 60) // one hour
+        .httponly()
+        .same_site(crow::CookieParser::Cookie::SameSitePolicy::Lax);
+    return sendResponse();
+}
