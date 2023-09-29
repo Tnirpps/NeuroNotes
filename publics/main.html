@@ -8,6 +8,7 @@
     <script type="text/javascript" src="js/main.js"></script>
     <script type="text/javascript" src="js/request.js"></script>
     <script type="text/javascript" src="js/ui.js"></script>
+    <script type="text/javascript" src="js/graph.js"></script>
     <title>NeuroNotes</title>
     </head>
 <body>
@@ -68,12 +69,46 @@
             let ctx = canvas.getContext("2d");
             ctx.canvas.width = container.getBoundingClientRect().width;
             ctx.canvas.height = container.getBoundingClientRect().height;
-            
+ 
 
             c = new TCanvas(canvas);
-            canvas.addEventListener("click", drawHandler);
+//            canvas.addEventListener("click", drawHandler);
         });
         updateCreatedProjects();
+
+
+        window.oncontextmenu = function () {
+            return false;     // cancel default menu
+        }
+        let CC = new TCanvas(document.querySelector("canvas"));
+        let GG = new TGraph("black", "#D42BE2", "#830C9C");
+        function createHandler(e) {
+            const DPC = 40;
+            let rect = c.ctx.canvas.getBoundingClientRect();
+            GG.addNode(Math.round((e.clientX - rect.left) / DPC) * DPC, Math.round((e.clientY - rect.top) / DPC) * DPC);
+            CC.setData(GG);
+            CC.show();
+        }
+        document.querySelector("canvas").onmousedown = function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (e.which == 3) {
+                createHandler(e); 
+            } else {
+                CC.myDown(e);
+            }
+        }
+        document.querySelector("canvas").onmouseup = function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            CC.myUp(e);
+        }
+        document.querySelector("canvas").onmousemove = function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            CC.myMove(e);
+        }
+
     </script>
 </body>
 </html>
