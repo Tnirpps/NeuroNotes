@@ -85,6 +85,7 @@ class TCanvas {
 
     myUp(e) {
         this.drag.is = false;
+        if (Object.keys(this.graph).length == 0) return;
         if (this.graph.data.hasOwnProperty(this.drag.active)) {
             let u = this.graph.data[this.drag.active]; 
             this.graph.data[this.drag.active].x = Math.round(u.x / this.DPC) * this.DPC;
@@ -112,8 +113,25 @@ class TCanvas {
         // by the distance the mouse has moved
         // since the last mousemove
         if (this.graph.data.hasOwnProperty(this.drag.active)) {
-            this.graph.data[this.drag.active].x += dx;
-            this.graph.data[this.drag.active].y += dy;
+            let free = true;
+            for (const i in this.graph.data) {
+                if (i == this.drag.active) {
+                    continue;
+                }
+                let u = this.graph.data[i];
+                let X = this.graph.data[this.drag.active].x + dx;
+                let Y = this.graph.data[this.drag.active].y + dy;
+                if ((u.x - X) * (u.x - X) + (u.y - Y) * (u.y - Y) < 2 * u.radius * 2 * u.radius) {
+                    free = false;
+                    break;
+                }
+
+            }
+            if (free) {
+                this.graph.data[this.drag.active].x += dx;
+                this.graph.data[this.drag.active].y += dy;
+            }
+
         }
 
         // redraw the scene with the new rect positions
@@ -163,8 +181,11 @@ class TGraph {
         return false;
     }
 
-    addNode(x, y) {
-        let node = new TNode(x, y, 20, this.nodeColor);
+    addNode(id, x, y) {
+        if (this.data.hasOwnProperty(id)) {
+            return;
+        }
+        let node = new TNode(id, x, y, 20, this.nodeColor);
         this.data[node.id] = node;
         this.graph[node.id] = new Array();
     }
@@ -202,11 +223,10 @@ class TGraph {
 
 
 class TNode {
-    static idCount = 0;
-    constructor(posX, posY, radius) {
+    constructor(id, posX, posY, radius) {
         this.x = posX;
         this.y = posY;
-        this.id = TNode.idCount++;
+        this.id = id;
         this.radius = radius;
     }
 

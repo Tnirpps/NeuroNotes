@@ -85,9 +85,10 @@
         function createHandler(e) {
             const DPC = 40;
             let rect = c.ctx.canvas.getBoundingClientRect();
-            GG.addNode(Math.round((e.clientX - rect.left) / DPC) * DPC, Math.round((e.clientY - rect.top) / DPC) * DPC);
-            CC.setData(GG);
-            CC.show();
+            //GG.addNode(1, Math.round((e.clientX - rect.left) / DPC) * DPC, Math.round((e.clientY - rect.top) / DPC) * DPC);
+            //CC.setData(GG);
+            //CC.show();
+            console.log("do nothing");
         }
         document.querySelector("canvas").onmousedown = function (e) {
             e.preventDefault();

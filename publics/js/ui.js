@@ -84,7 +84,7 @@ function hasChildProject(parent, name) {
     return false;
 }
 
-function pushButtonToDOM(parent, text, project, content="") {
+function pushButtonToDOM(parent, text, project, content="", id="") {
     let item = document.createElement("button");
     let maxLen = 15;
     if (project) {
@@ -92,6 +92,7 @@ function pushButtonToDOM(parent, text, project, content="") {
     } else {
         item.addEventListener("click", setActiveNote);
         item.title = content;
+        item.id = ("note_" + id);
     }
     item.textContent = text.length > maxLen?
         text.substr(0, maxLen - 3) + "...":
@@ -122,7 +123,16 @@ function closeCurrentNote(el) {
     removeAllChidren(document.getElementById("created_notes"));
 }
 
-
+function updateGraphOfNotes(edges) {
+    for (let s of edges)  {
+        let edg = s.split(":");
+        GG.addNode(edg[0], Math.random() * 300, 100);
+        GG.addNode(edg[1], Math.random() * 300, 200);
+        GG.addEdge(edg[0], edg[1]);
+        CC.setData(GG);
+        CC.show();
+    }
+}
 
 
 

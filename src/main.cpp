@@ -6,6 +6,7 @@
 #include <crow/json.h>
 #include <crow/middlewares/cookie_parser.h>
 #include <exception>
+#include <fmt/core.h>
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -89,14 +90,33 @@ int main() {
                     );
         } else {
             auto rc = DB::Project::Select({DB::Project::id}).Where({
+                        DB::Project::ownerId == DB::Int(userId),
                         DB::Project::name == DB::Str(req.body),
                     });
             if (rc.empty() || rc[0].empty()) return sendErrorResponse("such Project does not exist");
-            return sendResponse(
+
+            auto noteList = DB::Note::Select({DB::Note::name, DB::Note::body, DB::Note::id}).Where({
+                    DB::Note::projectId == DB::Int(rc[0][0]),
+                    });
+            std::vector<std::string> graphList;
+            for (int i = 0; i < noteList.size(); ++i) {
+                auto tmp = DB::Edge::Select({DB::Edge::dest}).Where({DB::Edge::start == DB::Int(noteList[i][2])});
+                for (int j = 0; j < tmp.size(); ++j) {
+                    graphList.push_back(fmt::format("{}:{}", noteList[i][2], tmp[j][0]));
+                }
+            }
+
+            crow::json::wvalue x;
+            x["status"] = "ok";
+            x["body"] = noteList;
+            x["graph"] = graphList;
+            return x;
+            /*return sendResponse(
                 DB::Note::Select({DB::Note::name, DB::Note::body}).Where({
                     DB::Note::projectId == DB::Int(rc[0][0]),
                     })
                 );
+            */
         }
         return sendErrorResponse("invalid request arguments");
     });

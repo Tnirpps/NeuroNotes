@@ -155,6 +155,21 @@ namespace DB {
             static UpdateQuery Update(const std::vector<Condition>& queryCols);
             static InsertQuery Insert();
     };
+
+    class Edge {
+        
+        static const std::string tableName;
+        
+        public:
+
+            /* list of columns names in table `notes` */
+            static const IntColumn id;
+            static const IntColumn start;
+            static const IntColumn dest;
+
+            static SelectQuery Select(const std::vector<Column>& queryCols);
+            static InsertQuery Insert();
+    };
 };
 
 #endif /* ifndef DATABASE_LIB */

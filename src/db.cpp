@@ -198,3 +198,18 @@ const DB::IntColumn DB::Note::projectId("project");
 
 
 
+DB::InsertQuery DB::Edge::Insert() {
+    return InsertQuery(tableName);
+}
+
+DB::SelectQuery DB::Edge::Select(const std::vector<Column>& queryCols) {
+    return SelectQuery(tableName, queryCols);
+}
+
+
+const std::string DB::Edge::tableName = "edges";
+
+const DB::IntColumn DB::Edge::id("id");
+const DB::IntColumn DB::Edge::start("start");
+const DB::IntColumn DB::Edge::dest("dest");
+
