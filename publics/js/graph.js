@@ -33,6 +33,12 @@ class TCanvas {
 
     setData(graph) {
         this.graph = graph;
+        for (let i in this.graph.data) {
+            let u = this.graph.data[i];
+            console.log(u.x, u.y, u);
+            this.graph.data[i].x = Math.round(u.x / this.DPC) * this.DPC;
+            this.graph.data[i].y = Math.round(u.y / this.DPC) * this.DPC;
+        }
     }
 
     clear() {
@@ -185,9 +191,8 @@ class TGraph {
         if (this.data.hasOwnProperty(id)) {
             return;
         }
-        let node = new TNode(id, x, y, 20, this.nodeColor);
-        this.data[node.id] = node;
-        this.graph[node.id] = new Array();
+        this.data[id] = new TNode(id, x, y, 20);
+        this.graph[id] = new Array();
     }
 
     removeNode(node) {
@@ -224,9 +229,9 @@ class TGraph {
 
 class TNode {
     constructor(id, posX, posY, radius) {
+        this.id = id;
         this.x = posX;
         this.y = posY;
-        this.id = id;
         this.radius = radius;
     }
 

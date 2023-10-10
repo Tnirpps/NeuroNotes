@@ -167,13 +167,13 @@ async function updateCreatedNotes(project) {
     let r = await getNotes(project);
     let notes = new Array;
     for (let i of r.body) {
-        let tmp = new Array;
         notes.push(i);
     }
+    updateGraphOfNotes(notes, r.graph);
+
     notes = notes.filter((item) => !hasChildProject(el, item[0]));
     console.log(notes);
     notes.forEach((item) => pushButtonToDOM(el, item[0], false, item[1], item[2]));
-    updateGraphOfNotes(r.graph);
 }
 
 async function updateNoteText(el) {

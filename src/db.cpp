@@ -1,5 +1,6 @@
 #include "db.hpp"
 #include <iostream> // TODO: remove
+#include <string>
 
 std::string DB::Condition::GetKey() const {
     return key;
@@ -14,7 +15,7 @@ std::string DB::Condition::GetEqForm() const {
 }
 
 
-pqxx::connection DB::SelectQuery::Connect() {
+pqxx::connection DB::Connection::Connect() {
     return pqxx::connection(fmt::format(
                 "user={} password={} host={} port={} dbname={}",
                 user, password, host, port, dbName
@@ -67,13 +68,6 @@ DB::SelectQuery DB::User::Select(const std::vector<Column>& queryCols) {
 
 
 
-
-pqxx::connection DB::InsertQuery::Connect() {
-    return pqxx::connection(fmt::format(
-                "user={} password={} host={} port={} dbname={}",
-                user, password, host, port, dbName
-                ));
-}
 
 std::string DB::InsertQuery::CreateSqlQueryString(const std::vector<Condition>& c) {
     if (c.empty()) return "error";
@@ -131,12 +125,6 @@ bool DB::UpdateQuery::Where(const std::vector<Condition>& v) {
     return true;
 }
 
-pqxx::connection DB::UpdateQuery::Connect() {
-    return pqxx::connection(fmt::format(
-                "user={} password={} host={} port={} dbname={}",
-                user, password, host, port, dbName
-                ));
-}
 
 DB::InsertQuery DB::User::Insert() {
     return InsertQuery(tableName);
@@ -195,6 +183,8 @@ const DB::StrColumn DB::Note::name("name");
 const DB::StrColumn DB::Note::body("body");
 const DB::StrColumn DB::Note::date("created_on");
 const DB::IntColumn DB::Note::projectId("project");
+const DB::IntColumn DB::Note::posX("pos_x");
+const DB::IntColumn DB::Note::posY("pos_y");
 
 
 

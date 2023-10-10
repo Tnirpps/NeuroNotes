@@ -65,12 +65,16 @@ namespace DB {
             StrColumn(const std::string& s) : Column(s) {};
     };
 
-// TODO: унаследовать коннектион
-    class SelectQuery {
+
+    class Connection {
+        public:
+            pqxx::connection Connect();
+    };
+
+    class SelectQuery : private Connection {
         private:
             std::string tableName;
             std::vector<Column> res;
-            pqxx::connection Connect();
 
         public:
             std::string CreateSqlQueryString(const std::vector<Condition>& v);
@@ -79,10 +83,9 @@ namespace DB {
             std::vector<std::vector<std::string>> Where(const std::vector<Condition>& v);
     };
 
-    class InsertQuery {
+    class InsertQuery : private Connection {
         private:
             std::string tableName;
-            pqxx::connection Connect();
         public:
             std::string CreateSqlQueryString(const std::vector<Condition>& v);
             InsertQuery(const std::string& s): tableName(s) {}
@@ -91,11 +94,11 @@ namespace DB {
 
     };
 
-    class UpdateQuery {
+    class UpdateQuery : private Connection {
         private:
             std::string tableName;
             std::vector<Condition> res;
-            pqxx::connection Connect();
+            //pqxx::connection Connect();
 
         public:
             std::string CreateSqlQueryString(const std::vector<Condition>& v);
@@ -150,6 +153,9 @@ namespace DB {
             static const StrColumn body;
             static const StrColumn date;
             static const IntColumn projectId;
+
+            static const IntColumn posX;
+            static const IntColumn posY;
 
             static SelectQuery Select(const std::vector<Column>& queryCols);
             static UpdateQuery Update(const std::vector<Condition>& queryCols);

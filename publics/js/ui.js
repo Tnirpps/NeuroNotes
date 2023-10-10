@@ -123,15 +123,17 @@ function closeCurrentNote(el) {
     removeAllChidren(document.getElementById("created_notes"));
 }
 
-function updateGraphOfNotes(edges) {
+function updateGraphOfNotes(notes, edges) {
+    notes.forEach((el) => {
+        GG.addNode(el[2], el[3], el[4]);
+    });
+    console.log(GG.data);
     for (let s of edges)  {
         let edg = s.split(":");
-        GG.addNode(edg[0], Math.random() * 300, 100);
-        GG.addNode(edg[1], Math.random() * 300, 200);
         GG.addEdge(edg[0], edg[1]);
-        CC.setData(GG);
-        CC.show();
     }
+    CC.setData(GG);
+    CC.show();
 }
 
 

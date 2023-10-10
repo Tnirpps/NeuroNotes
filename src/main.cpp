@@ -95,7 +95,7 @@ int main() {
                     });
             if (rc.empty() || rc[0].empty()) return sendErrorResponse("such Project does not exist");
 
-            auto noteList = DB::Note::Select({DB::Note::name, DB::Note::body, DB::Note::id}).Where({
+            auto noteList = DB::Note::Select({DB::Note::name, DB::Note::body, DB::Note::id, DB::Note::posX, DB::Note::posY}).Where({
                     DB::Note::projectId == DB::Int(rc[0][0]),
                     });
             std::vector<std::string> graphList;
