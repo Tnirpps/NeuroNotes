@@ -63,6 +63,8 @@ function setActiveNote(el) {
     document.getElementById("note_inner_content").style.display = "block";
     document.getElementById("update_note_text").name = el.target.name;
     document.getElementById("note_text_content").innerHTML = el.target.title;
+    CC.user.focus = el.target.id.split("_")[1];
+    CC.show();
 }
 
 /*
@@ -116,11 +118,19 @@ function setActiveProject(el) {
     updateCreatedNotes(el.target.name);
 }
 
-function closeCurrentNote(el) {
+function closeCurrentNote() {
     document.getElementById("create_box").style.display = "block";
     document.getElementById("note_content").style.display = "none";
     document.getElementById("note_inner_content").style.display = "none";
     removeAllChidren(document.getElementById("created_notes"));
+    if (Object.keys(CC.graph).length != 0) {
+        dumpGraph(CC.graph);
+    }
+    GG.data  = Object();
+    GG.graph = Object();
+    CC.graph = Object();
+    CC.user.focus = -1;
+    CC.show();
 }
 
 function updateGraphOfNotes(notes, edges) {

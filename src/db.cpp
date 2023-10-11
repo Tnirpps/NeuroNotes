@@ -66,9 +66,6 @@ DB::SelectQuery DB::User::Select(const std::vector<Column>& queryCols) {
     return SelectQuery(tableName, queryCols);
 }
 
-
-
-
 std::string DB::InsertQuery::CreateSqlQueryString(const std::vector<Condition>& c) {
     if (c.empty()) return "error";
     std::string query = fmt::format("insert into {} (", tableName);
@@ -94,8 +91,6 @@ bool DB::InsertQuery::Where(const std::vector<Condition>& v) {
     c.close();
     return true;
 }
-
-
 
 std::string DB::UpdateQuery::CreateSqlQueryString(const std::vector<Condition>& c) {
     std::string query = fmt::format("update {} set ", tableName);
@@ -125,14 +120,39 @@ bool DB::UpdateQuery::Where(const std::vector<Condition>& v) {
     return true;
 }
 
+std::string DB::RemoveQuery::CreateSqlQueryString(const std::vector<Condition>& c) {
+    std::string query = fmt::format("dalate from {} ", tableName);
+    // remove all elements
+    if (c.empty()) return query;
+    query += "where ";
 
-DB::InsertQuery DB::User::Insert() {
-    return InsertQuery(tableName);
+    for (size_t i = 0; i + 1 < c.size(); ++i) {
+        query += (c[i].GetEqForm() + " AND ");
+    }
+    query += c.back().GetEqForm();
+    std::cout << "CREATED QUERY:: " << query << "\n";
+    return query;
+}    
+
+bool DB::RemoveQuery::Where(const std::vector<Condition>& v) {
+    auto c = Connect();
+    pqxx::work tx{c};
+    auto res = tx.exec(CreateSqlQueryString(v));
+    tx.commit();
+    c.close();
+    return true;
 }
 
 
 
 
+DB::InsertQuery DB::User::Insert() {
+    return InsertQuery(tableName);
+}
+
+DB::RemoveQuery DB::User::Remove() {
+    return RemoveQuery(tableName);
+}
 
 const std::string DB::User::tableName = "users";
 
@@ -147,6 +167,10 @@ const DB::StrColumn DB::User::email("email");
 
 DB::InsertQuery DB::Project::Insert() {
     return InsertQuery(tableName);
+}
+
+DB::RemoveQuery DB::Project::Remove() {
+    return RemoveQuery(tableName);
 }
 
 DB::SelectQuery DB::Project::Select(const std::vector<Column>& queryCols) {
@@ -166,6 +190,10 @@ const DB::IntColumn DB::Project::ownerId("owner");
 
 DB::InsertQuery DB::Note::Insert() {
     return InsertQuery(tableName);
+}
+
+DB::RemoveQuery DB::Note::Remove() {
+    return RemoveQuery(tableName);
 }
 
 DB::SelectQuery DB::Note::Select(const std::vector<Column>& queryCols) {
@@ -190,6 +218,10 @@ const DB::IntColumn DB::Note::posY("pos_y");
 
 DB::InsertQuery DB::Edge::Insert() {
     return InsertQuery(tableName);
+}
+
+DB::RemoveQuery DB::Edge::Remove() {
+    return RemoveQuery(tableName);
 }
 
 DB::SelectQuery DB::Edge::Select(const std::vector<Column>& queryCols) {

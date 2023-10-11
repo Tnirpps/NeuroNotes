@@ -100,7 +100,8 @@ async function SendPostRequest(url, obj) {
 
 async function createNewProject() {
     let obj = new Object();
-    obj.type = "Project";
+    obj.type = "update";
+    obj.aim = "Project";
     obj.name = document.getElementById("project_name_input_field").value;
                document.getElementById("project_name_input_field").value = "";
     let response = await SendPostRequest("/serv", obj);
@@ -114,7 +115,8 @@ async function createNewProject() {
 
 async function createNewNote(e) {
     let obj = new Object();
-    obj.type = "Note";
+    obj.type = "update";
+    obj.aim = "Note";
     obj.parent = e.name
     if (obj.parent.length == 0) return ""
     obj.data = document.getElementById("note_name_input_field").value;
@@ -178,7 +180,8 @@ async function updateCreatedNotes(project) {
 
 async function updateNoteText(el) {
     obj = new Object;
-    obj.type = "Note";
+    obj.type = "update";
+    obj.aim = "Note";
     obj.parent = document.getElementById("project_box").name;
     obj.name = el.name;
     obj.content = document.getElementById("note_text_content").innerHTML;
@@ -187,5 +190,19 @@ async function updateNoteText(el) {
     if (JSON.stringify(r).length != 0 && r.status == "ok") {
         document.getElementById("created_notes").getElementsByClassName("active")[0].title = obj.content;
     }
+}
+
+async function dumpGraph(graph) {
+    let obj = new Object();
+    obj.type = "update";
+    obj.aim = "graph";
+    obj.nodes = graph.dumpNodes();
+    obj.edges = graph.dumpEdges();
+    let url = "/serv";
+    let response = await SendPostRequest("/serv", obj);
+    if (JSON.stringify(response).length == 0 || response.status != "ok") {
+        console.log("Ошибка создания карточки")
+    }
+    return response;
 }
 

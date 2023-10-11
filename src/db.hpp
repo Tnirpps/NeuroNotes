@@ -107,6 +107,16 @@ namespace DB {
             bool Where(const std::vector<Condition>& v);
     };
 
+    class RemoveQuery : private Connection {
+        private:
+            std::string tableName;
+        public:
+            std::string CreateSqlQueryString(const std::vector<Condition>& v);
+            RemoveQuery(const std::string& s): tableName(s){}
+
+            bool Where(const std::vector<Condition>& v);
+    };
+
     class User {
         
         static const std::string tableName;
@@ -123,6 +133,7 @@ namespace DB {
 
             static SelectQuery Select(const std::vector<Column>& queryCols);
             static InsertQuery Insert();
+            static RemoveQuery Remove();
     };
 
     class Project {
@@ -139,6 +150,7 @@ namespace DB {
 
             static SelectQuery Select(const std::vector<Column>& queryCols);
             static InsertQuery Insert();
+            static RemoveQuery Remove();
     };
 
     class Note {
@@ -160,6 +172,7 @@ namespace DB {
             static SelectQuery Select(const std::vector<Column>& queryCols);
             static UpdateQuery Update(const std::vector<Condition>& queryCols);
             static InsertQuery Insert();
+            static RemoveQuery Remove();
     };
 
     class Edge {
@@ -175,6 +188,7 @@ namespace DB {
 
             static SelectQuery Select(const std::vector<Column>& queryCols);
             static InsertQuery Insert();
+            static RemoveQuery Remove();
     };
 };
 

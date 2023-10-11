@@ -8,6 +8,7 @@ class TCanvas {
         this.user = {
             select: false,
             active: -1,
+            focus: -1,
             camPos : {
                 x: 0,
                 y: 0,
@@ -35,7 +36,6 @@ class TCanvas {
         this.graph = graph;
         for (let i in this.graph.data) {
             let u = this.graph.data[i];
-            console.log(u.x, u.y, u);
             this.graph.data[i].x = Math.round(u.x / this.DPC) * this.DPC;
             this.graph.data[i].y = Math.round(u.y / this.DPC) * this.DPC;
         }
@@ -160,16 +160,15 @@ class TGraph {
     }
     
     addEdge(u, v) {
-        if (Math.min(u, v) >= 0 && this.graph.hasOwnProperty(u)) {
-            let f = false;
-            for (let i = 0; i < this.graph[u].length; i++) {
-                if (this.graph[u][i].id == v) {
-                    f = true;
-                }
+        if (this.hasEdge(u, v)) return;
+        let f = false;
+        for (let i = 0; i < this.graph[u].length; i++) {
+            if (this.graph[u][i].id == v) {
+                f = true;
             }
-            if (!f) {
-                this.graph[u].push(v);
-            }
+        }
+        if (!f) {
+            this.graph[u].push(v);
         }
     }
 
@@ -208,9 +207,9 @@ class TGraph {
         }
         for (const id in this.data) {
             if (user.select && user.active == id) {
-                this.data[id].render(ctx, user.camPos, this.activeNodeColor);
+                this.data[id].render(ctx, user.camPos, this.activeNodeColor, user.focus);
             } else {
-                this.data[id].render(ctx, user.camPos, this.nodeColor);
+                this.data[id].render(ctx, user.camPos, this.nodeColor, user.focus);
             }
         }
     }
@@ -224,6 +223,23 @@ class TGraph {
         ctx.stroke();
     }
 
+    dumpNodes() {
+        let r = ""
+        for (const id in this.data) {
+            r += this.data[id].asStr() + ","
+        }
+        return r;
+    }
+
+    dumpEdges() {
+        let r = ""
+        for (const i in this.graph) {
+            for (let j = 0; j < this.graph[i].length; j++) {
+                r += this.data[i].id + ":" + this.data[this.graph[i][j]].id + ",";
+            }
+        }
+        return r;
+    }
 }
 
 
@@ -235,14 +251,29 @@ class TNode {
         this.radius = radius;
     }
 
-    render(ctx, camPos, color) {
-        ctx.fillStyle = color;
-        ctx.beginPath();
-        ctx.arc(this.x - camPos.x, this.y - camPos.y, this.radius, 0, 2 * Math.PI);
-        //htmlCnv.ctx.lineWidth = 10;
-        //htmlCnv.ctx.strokeStyle = "blue";
-        //htmlCnv.ctx.stroke();
-        ctx.fill();
+    render(ctx, camPos, color, focus) {
+        if (this.id != focus) {
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.arc(this.x - camPos.x, this.y - camPos.y, this.radius, 0, 2 * Math.PI);
+            //htmlCnv.ctx.lineWidth = 10;
+            //htmlCnv.ctx.strokeStyle = "blue";
+            //htmlCnv.ctx.stroke();
+            ctx.fill();
+        } else {
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.arc(this.x - camPos.x, this.y - camPos.y, this.radius * 1.2, 0, 2 * Math.PI);
+            ctx.lineWidth = 10;
+            ctx.strokeStyle = "blue";
+            ctx.stroke();
+            ctx.fill();
+
+        }
+    }
+
+    asStr() {
+        return (this.id + "|" + this.x + ":" + this.y);
     }
 }
 

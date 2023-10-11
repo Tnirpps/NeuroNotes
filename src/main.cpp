@@ -37,6 +37,8 @@ crow::json::wvalue updateNote(const std::string& name, const std::string& projec
 
 crow::json::wvalue setApiKeyForUser(crow::App<crow::CookieParser>& app, const crow::request& req, const std::string& userId);
 
+crow::json::wvalue dumpGraph(const std::string& nodes, const std::string& edges);
+
 int main() {
     crow::App<crow::CookieParser> app;
 
@@ -127,18 +129,33 @@ int main() {
         std::string userId = getAuthUserId(app, req);
         if (userId.empty()) return sendErrorResponse("unauthorized user");
         crow::json::rvalue query = crow::json::load(req.body);
-        if (!query.has("type")) return sendErrorResponse("bad reques");
+        if (!query.has("type") || !query.has("aim")) return sendErrorResponse("bad reques");
 
-        if (query["type"] == "Project") {
-            return createNewProject(query["name"].s(), userId);
-        }
-        if (query["type"] == "Note") {
-            if (!query.has("content")) {
-                return createNewNote(query["data"].s(), query["parent"].s(), userId, "");
-            } else {
-                return updateNote(query["name"].s(), query["parent"].s(), userId, query["content"].s());
+        if (query["type"] == "update") {
+            if (query["aim"] == "Project") {
+                return createNewProject(query["name"].s(), userId);
             }
+            if (query["aim"] == "Note") {
+                if (!query.has("content")) {
+                    return createNewNote(query["data"].s(), query["parent"].s(), userId, "");
+                } else {
+                    return updateNote(query["name"].s(), query["parent"].s(), userId, query["content"].s());
+                }
+            }
+            if (query["aim"] == "graph") {
+                if (query.has("edges") && query.has("nodes")) {
+                //edges: u:v,u:v,
+                //nodes: id|x:y,id|x:y
+                    return dumpGraph(query["nodes"].s(), query["edges"].s());
+                } else {
+                    return sendErrorResponse("no graph data");
+                }
+
+            }
+        } else if (query["type"] == "remove") {
+
         }
+
         return sendErrorResponse("unknown request Type");
     });
 
@@ -297,6 +314,73 @@ crow::json::wvalue createNewProject(const std::string& name, const std::string& 
 
     return sendResponse();
 
+}
+
+std::vector<std::string> split(const std::string& s, char delim) {
+    std::vector<std::string> res;
+    std::string tmp;
+    for (char c: s) {
+        if (c == ' ' && ' ' != delim) continue;
+        if (c != delim) tmp.push_back(c);
+        else {
+            res.push_back(tmp);
+            tmp.clear();
+        }
+    }
+    if (!tmp.empty()) res.push_back(tmp);
+    return res;
+}
+
+// {
+// id|x:y,id|x:y
+// }
+
+bool dumpNodes(const std::string& nodes) {
+    auto d = split(nodes, ',');
+    bool rc = true;
+    for (const auto& x: d) {
+        auto e = split(x, '|');
+        if (e.size() != 2) return false;
+        auto c = split(e[1], ':');
+        if (c.size() != 2) return false;
+        rc = DB::Note::Update({DB::Note::posX == DB::Int(c[0]), DB::Note::posY == DB::Int(c[1])}).Where({
+                DB::Note::id == DB::Int(e[0]),
+                });
+        if (!rc) return false;
+    }
+    return true;
+}
+
+bool dumpEdges(const std::string& edges) {
+    auto d = split(edges, ',');
+    bool rc = true;
+    for (const auto& x: d) {
+        auto e = split(x, ':');
+        if (e.size() != 2) return false;
+        auto tmp = DB::Edge::Select({DB::Edge::dest}).Where({DB::Edge::start == DB::Int(e[0])});
+        if (tmp.empty()) {
+            rc = DB::Edge::Insert().Where({DB::Edge::start == DB::Int(e[0]), DB::Edge::dest == DB::Int(e[1])});
+            if (!rc) return false;
+            continue;
+        }
+        bool f = true;
+        for (const auto& s: tmp[0]) {
+            if (s == e[1]) f = false;
+        }
+        if (f) {
+            rc = DB::Edge::Insert().Where({DB::Edge::start == DB::Int(e[0]), DB::Edge::dest == DB::Int(e[1])});
+            if (!rc) return false;
+        }
+    }
+    return true;
+}
+
+crow::json::wvalue dumpGraph(const std::string& nodes, const std::string& edges) {
+    bool rc = dumpNodes(nodes);
+    if (!rc) return sendErrorResponse("cannot dumb graph");
+    rc = dumpEdges(edges);
+    if (!rc) return sendErrorResponse("cannot dumb graph");
+    return sendResponse();
 }
 
 crow::json::wvalue createNewNote(const std::string& name, const std::string& projectName, const std::string& userId, const std::string& body) {
