@@ -61,7 +61,7 @@
 
     <script charset="utf-8">
         // BEGIN GLOBAL
-        let c;
+        let CC = new TCanvas(document.querySelector("canvas"));
         // END GLOBAL
         document.addEventListener("DOMContentLoaded", () => {
             let canvas = document.querySelector("canvas");
@@ -71,7 +71,6 @@
             ctx.canvas.height = container.getBoundingClientRect().height;
  
 
-            c = new TCanvas(canvas);
 //            canvas.addEventListener("click", drawHandler);
         });
         updateCreatedProjects();
@@ -80,23 +79,21 @@
         window.oncontextmenu = function () {
             return false;     // cancel default menu
         }
-        let CC = new TCanvas(document.querySelector("canvas"));
-        let GG = new TGraph("black", "#D42BE2", "#830C9C");
+        CC.graph = new TGraph("black", "#D42BE2", "#830C9C");
         function createHandler(e) {
             const DPC = 40;
-            let rect = c.ctx.canvas.getBoundingClientRect();
+            let rect = CC.ctx.canvas.getBoundingClientRect();
             //GG.addNode(1, Math.round((e.clientX - rect.left) / DPC) * DPC, Math.round((e.clientY - rect.top) / DPC) * DPC);
-            //CC.setData(GG);
-            //CC.show();
+            CC.show();
             console.log("do nothing");
         }
         document.querySelector("canvas").onmousedown = function (e) {
             e.preventDefault();
             e.stopPropagation();
             if (e.which == 3) {
-                createHandler(e); 
+                CC.myDownRight(e); 
             } else {
-                CC.myDown(e);
+                CC.myDownLeft(e);
             }
         }
         document.querySelector("canvas").onmouseup = function (e) {

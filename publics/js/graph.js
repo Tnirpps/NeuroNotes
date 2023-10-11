@@ -52,7 +52,34 @@ class TCanvas {
         }
     }
 
-    myDown(e) {
+    async myDownRight(e) {
+        if (!this.user.select) return;
+        const offsetX = this.BB.left;
+        const offsetY = this.BB.top;
+        const mx = parseInt(e.clientX - offsetX);
+        const my = parseInt(e.clientY - offsetY);
+
+        let onNode = false;
+        for (const i in this.graph.data) {
+            let s = this.graph.data[i];
+            const dx = s.x - mx;
+            const dy = s.y - my;
+            // test if the mouse is inside this circle
+            if (dx * dx + dy * dy < s.radius * s.radius) {
+                let u = i;
+                let v = this.user.active;
+                if (this.graph.hasEdge(u, v)) {
+                    let r = await sendRemoveEdge(u, v);
+                    if (r.status != "ok") return;
+                }
+                this.graph.removeEdge(u, v);
+                this.show();
+                break;
+            }
+        }
+    }
+
+    myDownLeft(e) {
         const offsetX = this.BB.left;
         const offsetY = this.BB.top;
         const mx = parseInt(e.clientX - offsetX);
@@ -158,6 +185,22 @@ class TGraph {
         this.nodeColor = nodeColor;
         this.activeNodeColor = activeNodeColor;
     }
+
+    removeEdge(u, v) {
+        if (!this.hasEdge(u, v)) return;
+        if (this.graph.hasOwnProperty(u)) {
+            const index = this.graph[u].indexOf(v);
+            if (index > -1) {
+                this.graph[u].splice(index, 1);
+            }
+        }
+        if (this.graph.hasOwnProperty(v)) {
+            const index = this.graph[v].indexOf(u);
+            if (index > -1) {
+                this.graph[v].splice(index, 1);
+            }
+        }
+    }
     
     addEdge(u, v) {
         if (this.hasEdge(u, v)) return;
@@ -239,6 +282,11 @@ class TGraph {
             }
         }
         return r;
+    }
+
+    clear() {
+        this.data = {};
+        this.graph = {};
     }
 }
 

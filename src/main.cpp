@@ -153,6 +153,12 @@ int main() {
 
             }
         } else if (query["type"] == "remove") {
+            
+            // TODO: нормальное удаление и из графа тоже!
+            return sendResponse();
+            if (query["aim"] == "Note") {
+                DB::Note::Remove().Where({DB::Note::id == DB::Int(123)});
+            }
 
         }
 

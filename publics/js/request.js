@@ -206,3 +206,16 @@ async function dumpGraph(graph) {
     return response;
 }
 
+async function sendRemoveEdge(u, v) {
+    let obj = new Object();
+    obj.type = "remove";
+    obj.aim = "graph";
+    obj.edges = u + ":" + v;
+    let url = "/serv";
+    let response = await SendPostRequest("/serv", obj);
+    if (JSON.stringify(response).length == 0 || response.status != "ok") {
+        console.log("Ошибка удаления ребра");
+    }
+    return response;
+}
+

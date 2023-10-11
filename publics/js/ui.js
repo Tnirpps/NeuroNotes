@@ -126,23 +126,21 @@ function closeCurrentNote() {
     if (Object.keys(CC.graph).length != 0) {
         dumpGraph(CC.graph);
     }
-    GG.data  = Object();
-    GG.graph = Object();
-    CC.graph = Object();
+    CC.graph.clear();
     CC.user.focus = -1;
     CC.show();
 }
 
 function updateGraphOfNotes(notes, edges) {
     notes.forEach((el) => {
-        GG.addNode(el[2], el[3], el[4]);
+        CC.graph.addNode(el[2], el[3], el[4]);
     });
-    console.log(GG.data);
+    console.log(CC.graph.data);
     for (let s of edges)  {
         let edg = s.split(":");
-        GG.addEdge(edg[0], edg[1]);
+        CC.graph.addEdge(edg[0], edg[1]);
     }
-    CC.setData(GG);
+    CC.setData(CC.graph);
     CC.show();
 }
 
