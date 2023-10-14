@@ -221,3 +221,18 @@ async function sendRemoveEdge(u, v) {
     return response;
 }
 
+async function removeNote(e) {
+    obj = new Object;
+    obj.type = "remove";
+    obj.aim = "Note";
+    obj.parent = document.getElementById("project_box").name;
+    obj.name = document.getElementById("update_note_text").name;
+    let url = "/serv";
+    let response = await SendPostRequest("/serv", obj);
+    if (JSON.stringify(response).length == 0 || response.status != "ok") {
+        console.log("Ошибка удаления заметки");
+    }
+    let s = e.name.split("_");
+    CC.graph.removeNode(s[1]);
+    CC.show();
+}

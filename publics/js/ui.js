@@ -145,13 +145,6 @@ function updateGraphOfNotes(notes, edges) {
     CC.show();
 }
 
-function removeNote(e) {
-    let s = e.name.split("_");
-    CC.graph.removeNode(s[1]);
-    CC.show();
-    //server remove Node;
-
-}
 
 
 
