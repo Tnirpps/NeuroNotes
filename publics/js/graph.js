@@ -237,9 +237,15 @@ class TGraph {
         this.graph[id] = new Array();
     }
 
-    removeNode(node) {
-        let tmp = node.id;
-        delete this.data.tmp;
+    removeNode(id) {
+        delete this.data[id];
+        for (const i in this.graph) {
+            if (i == id) {
+                delete this.graph[i];   
+                continue;
+            }
+            this.graph[i] = this.graph[i].filter( el => el != id);
+        }
     }
 
     render(ctx, user) {

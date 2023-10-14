@@ -121,7 +121,7 @@ bool DB::UpdateQuery::Where(const std::vector<Condition>& v) {
 }
 
 std::string DB::RemoveQuery::CreateSqlQueryString(const std::vector<Condition>& c) {
-    std::string query = fmt::format("dalate from {} ", tableName);
+    std::string query = fmt::format("delete from {} ", tableName);
     // remove all elements
     if (c.empty()) return query;
     query += "where ";

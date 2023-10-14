@@ -62,6 +62,7 @@ function setActiveNote(el) {
     el.target.classList.add("active");
     document.getElementById("note_inner_content").style.display = "block";
     document.getElementById("update_note_text").name = el.target.name;
+    document.getElementById("remove_note").name = el.target.id;
     document.getElementById("note_text_content").innerHTML = el.target.title;
     CC.user.focus = el.target.id.split("_")[1];
     CC.show();
@@ -144,7 +145,13 @@ function updateGraphOfNotes(notes, edges) {
     CC.show();
 }
 
+function removeNote(e) {
+    let s = e.name.split("_");
+    CC.graph.removeNode(s[1]);
+    CC.show();
+    //server remove Node;
 
+}
 
 
 

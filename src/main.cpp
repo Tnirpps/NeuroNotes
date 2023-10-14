@@ -11,6 +11,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <vector>
 
 #include "db.hpp"
 #include "secret.hpp"
@@ -32,12 +33,14 @@ crow::json::wvalue sendResponse();
 crow::json::wvalue sendResponse(const std::vector<std::vector<std::string>>& body);
 
 crow::json::wvalue createNewProject(const std::string& name, const std::string& userId);
-crow::json::wvalue createNewNote(const std::string& name, const std::string& projectName, const std::string& userId, const std::string& body);
+crow::json::wvalue createNewNote(const std::string& name, const std::string& projectName, const std::string& userId, int64_t x, int64_t y);
 crow::json::wvalue updateNote(const std::string& name, const std::string& projectName, const std::string& userId, const std::string& body);
 
 crow::json::wvalue setApiKeyForUser(crow::App<crow::CookieParser>& app, const crow::request& req, const std::string& userId);
 
 crow::json::wvalue dumpGraph(const std::string& nodes, const std::string& edges);
+crow::json::wvalue removeEdge(const std::string& edge);
+crow::json::wvalue removeNote(const std::string& name, const std::string& projectName, const std::string& userId);
 
 int main() {
     crow::App<crow::CookieParser> app;
@@ -113,12 +116,6 @@ int main() {
             x["body"] = noteList;
             x["graph"] = graphList;
             return x;
-            /*return sendResponse(
-                DB::Note::Select({DB::Note::name, DB::Note::body}).Where({
-                    DB::Note::projectId == DB::Int(rc[0][0]),
-                    })
-                );
-            */
         }
         return sendErrorResponse("invalid request arguments");
     });
@@ -128,8 +125,17 @@ int main() {
         ([&](const crow::request& req) {
         std::string userId = getAuthUserId(app, req);
         if (userId.empty()) return sendErrorResponse("unauthorized user");
+        std::map<std::string, std::map<std::string, std::vector<std::string>>> requiredFields;
+        requiredFields["update"]["Project"] = {"name"};
+        requiredFields["update"]["Note"] = {"name", "parent"};
+        requiredFields["update"]["graph"] = {"edges", "nodes"};
+        requiredFields["remove"]["graph"] = {"edges"};
+        requiredFields["remove"]["Note"] = {"name", "parent"};
         crow::json::rvalue query = crow::json::load(req.body);
         if (!query.has("type") || !query.has("aim")) return sendErrorResponse("bad reques");
+        for (auto g: requiredFields[query["type"].s()][query["aim"].s()]) {
+            if (!query.has(g))return sendErrorResponse("bad reques");
+        }
 
         if (query["type"] == "update") {
             if (query["aim"] == "Project") {
@@ -137,29 +143,27 @@ int main() {
             }
             if (query["aim"] == "Note") {
                 if (!query.has("content")) {
-                    return createNewNote(query["data"].s(), query["parent"].s(), userId, "");
+                    if (!query.has("x") || !query.has("y")) sendErrorResponse("invalid request format for creating a note");
+                    return createNewNote(query["data"].s(), query["parent"].s(), userId, query["x"].i(), query["y"].i());
                 } else {
                     return updateNote(query["name"].s(), query["parent"].s(), userId, query["content"].s());
                 }
             }
             if (query["aim"] == "graph") {
-                if (query.has("edges") && query.has("nodes")) {
                 //edges: u:v,u:v,
                 //nodes: id|x:y,id|x:y
-                    return dumpGraph(query["nodes"].s(), query["edges"].s());
-                } else {
-                    return sendErrorResponse("no graph data");
-                }
+                return dumpGraph(query["nodes"].s(), query["edges"].s());
 
             }
         } else if (query["type"] == "remove") {
-            
-            // TODO: нормальное удаление и из графа тоже!
-            return sendResponse();
-            if (query["aim"] == "Note") {
-                DB::Note::Remove().Where({DB::Note::id == DB::Int(123)});
+            if (query["aim"] == "graph") {
+                return removeEdge(query["edges"].s());
             }
-
+            
+            if (query["aim"] == "Note") {
+                // SEND QUERY FROM CLIENT))
+                return removeNote(query["name"].s(), query["parent"].s(), userId);
+            }
         }
 
         return sendErrorResponse("unknown request Type");
@@ -381,6 +385,14 @@ bool dumpEdges(const std::string& edges) {
     return true;
 }
 
+crow::json::wvalue removeEdge(const std::string& edge) {
+    auto e = split(edge, ':');
+    if (e.size() != 2) return sendErrorResponse("invalid arguments in remove request");
+    DB::Edge::Remove().Where({DB::Edge::start == DB::Int(e[0]), DB::Edge::dest == DB::Int(e[1])});
+    DB::Edge::Remove().Where({DB::Edge::start == DB::Int(e[1]), DB::Edge::dest == DB::Int(e[0])});
+    return sendResponse();
+}
+
 crow::json::wvalue dumpGraph(const std::string& nodes, const std::string& edges) {
     bool rc = dumpNodes(nodes);
     if (!rc) return sendErrorResponse("cannot dumb graph");
@@ -389,18 +401,21 @@ crow::json::wvalue dumpGraph(const std::string& nodes, const std::string& edges)
     return sendResponse();
 }
 
-crow::json::wvalue createNewNote(const std::string& name, const std::string& projectName, const std::string& userId, const std::string& body) {
+crow::json::wvalue createNewNote(const std::string& name, const std::string& projectName, const std::string& userId, int64_t x, int64_t y) {
     auto rc = DB::Project::Select({DB::Project::id}).Where({
             DB::Project::name == DB::Str(projectName),
             DB::Project::ownerId == DB::Int(userId),
             });
     if (rc.empty() || rc[0].empty()) return sendErrorResponse("no such parent projest to create new note");
 
+
     DB::Note::Insert().Where({
             DB::Note::name == DB::Str(name),
             DB::Note::projectId == DB::Int(rc[0][0]),
             DB::Note::date == DB::Str(GetDateAsStr()),
             DB::Note::body == DB::Str(""),
+            DB::Note::posX == DB::Int(x),
+            DB::Note::posY == DB::Int(y),
             });
     return sendResponse();
 }
@@ -428,5 +443,19 @@ crow::json::wvalue setApiKeyForUser(crow::App<crow::CookieParser>& app, const cr
         .max_age(60 * 60) // one hour
         .httponly()
         .same_site(crow::CookieParser::Cookie::SameSitePolicy::Lax);
+    return sendResponse();
+}
+
+crow::json::wvalue removeNote(const std::string& name, const std::string& projectName, const std::string& userId) {
+    auto rc = DB::Project::Select({DB::Project::id}).Where({
+            DB::Project::name == DB::Str(projectName),
+            DB::Project::ownerId == DB::Int(userId),
+            });
+    if (rc.empty() || rc[0].empty()) return sendResponse(); 
+
+    DB::Note::Remove().Where({
+            DB::Note::name == DB::Str(name),
+            DB::Note::projectId == DB::Int(rc[0][0]),
+            });
     return sendResponse();
 }

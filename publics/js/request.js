@@ -118,6 +118,8 @@ async function createNewNote(e) {
     obj.type = "update";
     obj.aim = "Note";
     obj.parent = e.name
+    obj.x = Math.round((Math.random() * CC.htmlCnv.getBoundingClientRect().width  / CC.DPC) * CC.DPC);
+    obj.y = Math.round((Math.random() * CC.htmlCnv.getBoundingClientRect().height / CC.DPC) * CC.DPC);
     if (obj.parent.length == 0) return ""
     obj.data = document.getElementById("note_name_input_field").value;
                document.getElementById("note_name_input_field").value = "";
@@ -209,7 +211,7 @@ async function dumpGraph(graph) {
 async function sendRemoveEdge(u, v) {
     let obj = new Object();
     obj.type = "remove";
-    obj.aim = "graph";
+    obj.aim =  "graph";
     obj.edges = u + ":" + v;
     let url = "/serv";
     let response = await SendPostRequest("/serv", obj);
