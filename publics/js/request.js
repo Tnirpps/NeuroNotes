@@ -1,6 +1,7 @@
 let isDoneA = false;
 async function TrySendAuthForm(e) {
 
+
     if (isDoneA === true) {
         //isDoneA = false; мб нужное))
         return;
@@ -115,18 +116,24 @@ async function createNewProject() {
 
 async function createNewNote(e) {
     let obj = new Object();
+    obj.data = document.getElementById("note_name_input_field").value;
+               document.getElementById("note_name_input_field").value = "";
+    if (obj.data.length == 0) {
+        console.log("нельзя создать заметку без названия");
+        return;
+    }
     obj.type = "update";
     obj.aim = "Note";
+    obj.name = "no";
     obj.parent = e.name
     obj.x = Math.round((Math.random() * CC.htmlCnv.getBoundingClientRect().width  / CC.DPC) * CC.DPC);
     obj.y = Math.round((Math.random() * CC.htmlCnv.getBoundingClientRect().height / CC.DPC) * CC.DPC);
     if (obj.parent.length == 0) return ""
-    obj.data = document.getElementById("note_name_input_field").value;
-               document.getElementById("note_name_input_field").value = "";
     let url = "/serv";
     let response = await SendPostRequest("/serv", obj);
     if (JSON.stringify(response).length == 0 || response.status != "ok") {
-        console.log("Ошибка создания карточки")
+        console.log("Ошибка создания карточки");
+        console.log(response.error);
     }
     updateCreatedNotes(e.name);
     return response;
@@ -232,7 +239,10 @@ async function removeNote(e) {
     if (JSON.stringify(response).length == 0 || response.status != "ok") {
         console.log("Ошибка удаления заметки");
     }
+    removeNoteButton(e.name);
     let s = e.name.split("_");
     CC.graph.removeNode(s[1]);
     CC.show();
+    closeCurrentNote();
 }
+

@@ -119,7 +119,7 @@ function setActiveProject(el) {
     updateCreatedNotes(el.target.name);
 }
 
-function closeCurrentNote() {
+function closeCurrentProject() {
     document.getElementById("create_box").style.display = "block";
     document.getElementById("note_content").style.display = "none";
     document.getElementById("note_inner_content").style.display = "none";
@@ -145,7 +145,14 @@ function updateGraphOfNotes(notes, edges) {
     CC.show();
 }
 
+function removeNoteButton(id) {
+    let p = document.getElementById("created_notes");
+    p.removeChild(document.getElementById(id));
+}
 
+function closeCurrentNote() {
+    document.getElementById("note_inner_content").style.display = "none";
+} 
 
 
 
