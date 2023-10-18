@@ -7,6 +7,9 @@
 #include <pqxx/pqxx>
 #include <fmt/format.h>
 
+
+#include <iostream>
+
 namespace DB {
     const std::string user     = "tnirpps";
     const std::string password = "1234";
@@ -19,6 +22,7 @@ namespace DB {
     class Column {
         public:
             std::string name;
+            Column(){};
             Column(const std::string& c) : name(c) {};
     };
 
@@ -26,7 +30,19 @@ namespace DB {
         private:
             std::string key;
             std::string value;
+            bool set = false;
             Condition(const std::string& key, const std::string& value): key(key), value(value) {}
+            Condition(const std::string& key, const std::vector<std::string>& values): key(key) {
+                set = true;
+                value = "(";
+                for (std::string x: values) {
+                    value += x + ", ";
+                }
+                value.pop_back();
+                if (value.size() > 0) {
+                    value[value.size() - 1] = ')';
+                }
+            }
         public:
             std::string GetKey() const;
             std::string GetValue() const;
@@ -48,10 +64,20 @@ namespace DB {
             Str(Column c) : Column(c) {}
     };
 
+    class Vec : public Column {
+        public:
+            std::vector<std::string> items;
+            Vec(const std::vector<std::string>& v) : items(v), Column() {};
+            Vec(Column c) : Column(c) {}
+    };
+
     class IntColumn : public Column {
         public:
             Condition operator == (const DB::Int& other) const {
                 return Condition(name, other.name);
+            }
+            Condition operator == (const DB::Vec& other) const {
+                return Condition(name, other.items);
             }
             IntColumn(const std::string& s) : Column(s) {};
     };
@@ -60,6 +86,9 @@ namespace DB {
         public:
             Condition operator == (const DB::Str& other) const {
                 return Condition(name, fmt::format("'{}'", other.name));
+            }
+            Condition operator == (const DB::Vec& other) const {
+                return Condition(name, other.items);
             }
             // TODO: == для DB:Int просто кастует его к Str, вметсо ошибки
             StrColumn(const std::string& s) : Column(s) {};

@@ -32,15 +32,15 @@
                 </div>
                 <form id="registration_form" action="/main" method="get">
                     <div class="input-container">
-                        <input type="text" placeholder=" " id="reg_user" required>
+                        <input type="text" placeholder=" " id="reg_user" required  oninput="onInputName(this)" onchange="onInputName(this)">
                         <p>Имя</p>
                     </div>
                     <div class="input-container">
-                        <input type="text" placeholder=" " id="reg_email" required oninput="onInputEmail(this)">
+                        <input type="text" placeholder=" " id="reg_email" required oninput="onInputEmail(this)" onchange="onInputEmail(this)">
                         <p>Почта</p>
                     </div>
                     <div class="input-container">
-                        <input type="password" placeholder=" " id="reg_psw" required oninput="onInputPass(this)">
+                        <input type="password" placeholder=" " id="reg_psw" required oninput="onInputPass(this)" onchange="onInputPass(this)">
                         <p> Пароль </p>
                     </div>
                     <button>Зарегистрироваться</button>

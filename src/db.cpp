@@ -11,6 +11,7 @@ std::string DB::Condition::GetValue() const {
 }
 
 std::string DB::Condition::GetEqForm() const {
+    if (set) return fmt::format("{} in {}", key, value);
     return fmt::format("{} = {}", key, value);
 }
 

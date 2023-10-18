@@ -9,18 +9,17 @@ async function TrySendAuthForm(e) {
 
     e.preventDefault();
 
-    rc = await send_authorization_request();
-    console.log(rc)
-    if (rc.length != 0) {
+    response = await sendAuthorizationRequest();
+    if (JSON.stringify(response).length != 0 && response.status == "ok") {
         isDoneA = true;
         document.getElementById("authorization_form").getElementsByTagName("button")[0].click();
     } else {
-        console.log("Wrong pass");
+        console.log("неверный логин или пароль");
     }
     
 }
 
-async function send_authorization_request(){
+async function sendAuthorizationRequest(){
     let username = document.getElementById("auth_user").value;
     let password = document.getElementById("auth_psw").value;
     let url = "/auth";
@@ -30,14 +29,32 @@ async function send_authorization_request(){
             "Authorization" : "Basic " + username + ":" + password
         },
         body: "aboba",
+    }).then(response => {
+        if (!response.ok) {
+            return response.json()
+                .catch(() => {
+                    // Couldn't parse the JSON
+                    throw new Error(response.status);
+                })
+                .then(({message}) => {
+                    // Got valid JSON with error response, use it
+                    throw new Error(message || response.status);
+                });
+        }
+        // Successful response, parse the JSON and return the data
+        return response.json();
     });
-    let rc = await response.text();
-    return rc;
+    return response;
 }
 
 
 let isDoneR = false;
 async function TrySendRegForm(e) {
+
+    if (!validateRegForm()) {
+        e.preventDefault();
+        return;
+    }
 
     if (isDoneR === true) {
         //isDoneR = false; мб нужное))
@@ -242,6 +259,10 @@ async function removeNote(e) {
     removeNoteButton(e.name);
     let s = e.name.split("_");
     CC.graph.removeNode(s[1]);
+    if (CC.user.select && CC.user.active == s[1]) {
+        CC.user.select = false;
+        CC.user.active = -1;
+    }
     CC.show();
     closeCurrentNote();
 }

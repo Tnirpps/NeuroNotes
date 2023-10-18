@@ -38,6 +38,7 @@ crow::json::wvalue updateNote(const std::string& name, const std::string& projec
 
 crow::json::wvalue setApiKeyForUser(crow::App<crow::CookieParser>& app, const crow::request& req, const std::string& userId);
 
+crow::json::wvalue sendGraph(const std::string& userId, const std::string& projectName);
 crow::json::wvalue dumpGraph(const std::string& nodes, const std::string& edges);
 crow::json::wvalue removeEdge(const std::string& edge);
 crow::json::wvalue removeNote(const std::string& name, const std::string& projectName, const std::string& userId);
@@ -93,31 +94,8 @@ int main() {
                         DB::Project::ownerId == DB::Int(userId),
                         })
                     );
-        } else {
-            auto rc = DB::Project::Select({DB::Project::id}).Where({
-                        DB::Project::ownerId == DB::Int(userId),
-                        DB::Project::name == DB::Str(req.body),
-                    });
-            if (rc.empty() || rc[0].empty()) return sendErrorResponse("such Project does not exist");
-
-            auto noteList = DB::Note::Select({DB::Note::name, DB::Note::body, DB::Note::id, DB::Note::posX, DB::Note::posY}).Where({
-                    DB::Note::projectId == DB::Int(rc[0][0]),
-                    });
-            std::vector<std::string> graphList;
-            for (int i = 0; i < noteList.size(); ++i) {
-                auto tmp = DB::Edge::Select({DB::Edge::dest}).Where({DB::Edge::start == DB::Int(noteList[i][2])});
-                for (int j = 0; j < tmp.size(); ++j) {
-                    graphList.push_back(fmt::format("{}:{}", noteList[i][2], tmp[j][0]));
-                }
-            }
-
-            crow::json::wvalue x;
-            x["status"] = "ok";
-            x["body"] = noteList;
-            x["graph"] = graphList;
-            return x;
         }
-        return sendErrorResponse("invalid request arguments");
+        return sendGraph(userId, req.body);
     });
 
 
@@ -391,6 +369,39 @@ crow::json::wvalue removeEdge(const std::string& edge) {
     DB::Edge::Remove().Where({DB::Edge::start == DB::Int(e[0]), DB::Edge::dest == DB::Int(e[1])});
     DB::Edge::Remove().Where({DB::Edge::start == DB::Int(e[1]), DB::Edge::dest == DB::Int(e[0])});
     return sendResponse();
+}
+
+crow::json::wvalue sendGraph(const std::string& userId, const std::string& projectName) {
+            auto rc = DB::Project::Select({DB::Project::id}).Where({
+                        DB::Project::ownerId == DB::Int(userId),
+                        DB::Project::name == DB::Str(projectName),
+                    });
+            if (rc.empty() || rc[0].empty()) return sendErrorResponse("such Project does not exist");
+
+            auto noteList = DB::Note::Select({DB::Note::name, DB::Note::body, DB::Note::id, DB::Note::posX, DB::Note::posY}).Where({
+                    DB::Note::projectId == DB::Int(rc[0][0]),
+                    });
+            std::vector<std::string> vertex;
+            for (int i = 0; i < noteList.size(); ++i) {
+                vertex.push_back(noteList[i][2]);
+            }
+            std::vector<std::string> graphList;
+            if (!vertex.empty()) {
+                auto tmp = DB::Edge::Select({DB::Edge::start, DB::Edge::dest}).Where({DB::Edge::start == DB::Vec(vertex)});
+                for (int i = 0; i < tmp.size(); ++i) {
+                    graphList.push_back(fmt::format("{}:{}", tmp[0][0], tmp[0][1]));
+                }
+                tmp = DB::Edge::Select({DB::Edge::start, DB::Edge::dest}).Where({DB::Edge::dest == DB::Vec(vertex)});
+                for (int i = 0; i < tmp.size(); ++i) {
+                    graphList.push_back(fmt::format("{}:{}", tmp[0][0], tmp[0][1]));
+                }
+            }
+
+            crow::json::wvalue x;
+            x["status"] = "ok";
+            x["body"] = noteList;
+            x["graph"] = graphList;
+            return x;
 }
 
 crow::json::wvalue dumpGraph(const std::string& nodes, const std::string& edges) {
