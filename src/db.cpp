@@ -1,5 +1,4 @@
 #include "db.hpp"
-#include <iostream> // TODO: remove
 #include <string>
 
 std::string DB::Condition::GetKey() const {

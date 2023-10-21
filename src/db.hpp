@@ -6,9 +6,8 @@
 #include <vector>
 #include <pqxx/pqxx>
 #include <fmt/format.h>
-
-
 #include <iostream>
+
 
 namespace DB {
     const std::string user     = "tnirpps";
@@ -120,14 +119,12 @@ namespace DB {
             InsertQuery(const std::string& s): tableName(s) {}
 
             bool Where(const std::vector<Condition>& v);
-
     };
 
     class UpdateQuery : private Connection {
         private:
             std::string tableName;
             std::vector<Condition> res;
-            //pqxx::connection Connect();
 
         public:
             std::string CreateSqlQueryString(const std::vector<Condition>& v);

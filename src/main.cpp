@@ -389,11 +389,11 @@ crow::json::wvalue sendGraph(const std::string& userId, const std::string& proje
             if (!vertex.empty()) {
                 auto tmp = DB::Edge::Select({DB::Edge::start, DB::Edge::dest}).Where({DB::Edge::start == DB::Vec(vertex)});
                 for (int i = 0; i < tmp.size(); ++i) {
-                    graphList.push_back(fmt::format("{}:{}", tmp[0][0], tmp[0][1]));
+                    graphList.push_back(fmt::format("{}:{}", tmp[i][0], tmp[i][1]));
                 }
                 tmp = DB::Edge::Select({DB::Edge::start, DB::Edge::dest}).Where({DB::Edge::dest == DB::Vec(vertex)});
                 for (int i = 0; i < tmp.size(); ++i) {
-                    graphList.push_back(fmt::format("{}:{}", tmp[0][0], tmp[0][1]));
+                    graphList.push_back(fmt::format("{}:{}", tmp[i][0], tmp[i][1]));
                 }
             }
 
